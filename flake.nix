@@ -106,7 +106,7 @@
             xpatch
             xstring
             zref
-            xeCJK
+            ctex
             ;
 
           inconsolata-lgc-latex = {
