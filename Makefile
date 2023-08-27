@@ -11,6 +11,9 @@ rwildcard=$(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
 ctfp:
 	cd src; $(LATEXMK_COMMAND) -jobname=ctfp ctfp-reader.tex
 
+ctfp-zh-cn:
+	cd src; $(LATEXMK_COMMAND) -jobname=ctfp-zh-cn ctfp-reader-zh-cn.tex
+
 ctfp-ocaml:
 	cd src; $(LATEXMK_COMMAND) -jobname=ctfp-ocaml ctfp-reader-ocaml.tex
 
