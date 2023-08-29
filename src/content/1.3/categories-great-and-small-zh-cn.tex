@@ -1,0 +1,298 @@
+% !TEX root = ../../ctfp-print.tex
+
+\lettrine[lhang=0.17]
+{范}畴实例可以让你欣赏范畴. 有各种形状和大小的范畴, 它们经常在意想不到的地方出现. 我们从最简单的例子开始.
+
+\section{无物件}
+
+最简单的范畴是无物件的范畴, 自然也没有态射. 这范畴好像很无聊, 但它在其它范畴的背景中或许有用. 例如, 在所有
+范畴的范畴中(是的, 有这个). 如果你觉得空集有用, 那为什么不要空范畴呢?
+
+\section{简单图}
+
+你可以把物件用箭头连接起来. 这样就得到一个范畴. 从一个有向图开始, 添加更多的箭头, 就可以把它变成范畴. 首先,
+在每个节点处增加一个单位箭头. 然后, 对任何两个首尾相连的箭头(\newterm{可组合箭头}), 添加一个新的箭头,
+作为它们的组合. 每次加入新箭头的时候, 你都要考虑它和其它箭头的组合(单位箭头除外). 你通常会得到无限多的箭头, 但没关系.
+
+换一种角度看这个过程. 你在创建一个范畴, 物件是图的每个节点, 态射是所有可组合图边的\newterm{Chain 链}.
+(你甚至可以把单位态射看作长度为零的链.)
+
+这种范畴叫做从一个图生成的 \newterm{free category 自由范畴}. 这个构造过程是一种自由构造, 就是向一个结构
+中加入最少的元素, 使之成为符合新规则(在这里是范畴的规则)的一个结构. 未来会有更多例子.
+
+\section{序}
+
+接着来点完全不一样的! 这个范畴的态射是物件之间的关系: 小于等于. 让我们检查一下它是否确实是一个范畴. 有单位态射吗?
+每个物件都小于等于自己: 当然! 有组合吗? 若 $a \leqslant b$ 且 $b \leqslant c$, 那么 $a \leqslant c$: 当然!
+服从结合律吗? 当然! 这种关系叫做 \newterm{preorder 预序}, 所以预序集确实是范畴.
+
+关系还可以更强一些, 需要一些额外条件. 若 $a \leqslant b$ 且 $b \leqslant a$, 那么 $a$ 必须和 $b$ 相等.
+这种关系叫做\newterm{partial order 偏序}.
+
+还可以要求任何两个物件之间都有关系, 要么正着, 要么反着. 这样就得到\newterm{linear order 线序}或
+\newterm{total order 全序}关系.
+
+把这些有序集合作为范畴来研究. 预序集合这个范畴里, 从任意物件 $a$ 到任何物件 $b$ 最多只有一个态射.
+这种范畴叫做\newterm{thin 薄}范畴. 预序集合是薄范畴.
+
+范畴 $\cat{C}$ 中从物件 $a$ 到物件 $b$ 的态射集合叫做\newterm{hom-set} $\cat{C}(a, b)$ (或者有时候写作
+$\mathbf{Hom}_{\cat{C}}(a, b)$). 所以预序集合中的每个 hom-set 要么是空集, 要么是单例集合. 这包括
+$\cat{C}(a, a)$, 从 $a$ 到 $a$ 的态射集合, 它必须是单例集合, 只包含单位态射. 但是, 你可以在预序集合中
+有环. 环不能出现在偏序集中.
+
+识别预序集合, 偏序集合和全序集合很重要, 因为排序. 排序算法, 例如快速排序, 冒泡排序, 归并排序等, 只能在全序集合上
+正确工作. 偏序集合只能用拓扑排序.
+
+\section{幺半群作为集合}
+
+幺半群是一个非常简单却又非常强大的概念. 这概念隐藏在基本算数后面: 加法和乘法都形成幺半群. 幺半群在编程中无处不在.
+它们出现在字符串, 列表, 可折叠数据结构, 并发编程中的 futures, 函数式响应式(reactive)编程中的事件等等.
+
+传统来说, 幺半群是一个带有二元运算的集合. 这个运算必须满足结合律, 并且有一个特殊元素作为幺元.
+
+例如, 含有零的自然数和加法运算形成一个幺半群. 结合律意味着:
+\[(a + b) + c = a + (b + c)\]
+(就是, 加法的时候不用括号)
+
+幺元是零, 因为
+\[0 + a = a\]
+而且
+\[a + 0 = a\]
+第二个等式是多余的, 因为加法是交换的 $(a + b = b + a)$, 但交换不是幺半群的定义的一部分. 例如, 字符串拼接
+不是交换的, 但它形成一个幺半群. 顺带一提, 字符串拼接的幺元是空字符串, 它附加到字符串的任一端都不改变它.
+
+在 Haskell 中, 我们可以为幺半群定义一个类型类 --- 一个带有幺元\code{mempty}的类型, 以及一个
+二元运算叫做\code{mappend}:
+
+\src{snippet01}
+
+函数有两个参数, 签名类型\code{m -> m -> m}一开始看起来有点奇怪. 讲过柯里化(currying)后, 它就会变得很清楚.
+可以用两种方法解释带有多个箭头的签名: 作为多个参数的函数, 最右边的类型是返回类型; 或者作为一个参数的函数
+(最左边的), 返回一个函数. 后一种解释可以用括号强调, 尽管括号是多余的(因为箭头是右结合的), 就像这样:
+\code{m -> (m -> m)}. 一会儿我们会回来讨论这种解释.
+
+注意 Haskell 没有办法表达幺半群的性质(即\code{mempty}是幺元, \code{mappend}是结合的).
+需要程序员来确保它们满足这些性质.
+
+Haskell 的类不像 C++ 那样具有侵入性. 定义一个新类型时, 你不必事先指定它的类. 你可以拖延, 后面再声明这类型
+是某个类的实例. 例如, 让我们声明\code{String}是一个幺半群, 提供\code{mempty}和\code{mappend}的实现
+(实际上, 这在标准 Prelude 中已经做过了):
+
+\src{snippet02}
+这里我们重用 \code{(++)} 列表连接运算符, 因为 \code{String} 只是字符列表.
+
+A word about Haskell syntax: Any infix operator can be turned into a
+two-argument function by surrounding it with parentheses. Given two
+strings, you can concatenate them by inserting \code{++} between them:
+
+\begin{snip}{haskell}
+"Hello " ++ "world!"
+\end{snip}
+or by passing them as two arguments to the parenthesized \code{(++)}:
+
+\begin{snip}{haskell}
+(++) "Hello " "world!"
+\end{snip}
+Notice that arguments to a function are not separated by commas or
+surrounded by parentheses. (This is probably the hardest thing to get
+used to when learning Haskell.)
+
+It's worth emphasizing that Haskell lets you express equality of
+functions, as in:
+
+\begin{snip}{haskell}
+mappend = (++)
+\end{snip}
+Conceptually, this is different than expressing the equality of values
+produced by functions, as in:
+
+\begin{snip}{haskell}
+mappend s1 s2 = (++) s1 s2
+\end{snip}
+The former translates into equality of morphisms in the category
+$\Hask$ (or $\Set$, if we ignore bottoms, which is the name
+for never-ending calculations). Such equations are not only more
+succinct, but can often be generalized to other categories. The latter
+is called \newterm{extensional} equality, and states the fact that for any
+two input strings, the outputs of \code{mappend} and \code{(++)} are
+the same. Since the values of arguments are sometimes called
+\newterm{points} (as in: the value of $f$ at point $x$), this is called
+point-wise equality. Function equality without specifying the arguments
+is described as \newterm{point-free}. (Incidentally, point-free equations
+often involve composition of functions, which is symbolized by a point,
+so this might be a little confusing to the beginner.)
+
+The closest one can get to declaring a monoid in C++ would be to use the
+C++20 standard's concept feature.
+
+\begin{snip}{cpp}
+template<class T>
+struct mempty;
+
+template<class T>
+T mappend(T, T) = delete;
+
+template<class M>
+concept Monoid = requires (M m) {
+    { mempty<M>::value() } -> std::same_as<M>;
+    { mappend(m, m) } -> std::same_as<M>;
+};
+\end{snip}
+The first definition is a structure meant to hold the neutral element for each
+specialization.
+
+The keyword \code{delete} means that there is no default value
+defined: It will have to be specified on a case-by-case basis.
+Similarly, there is no default for \code{mappend}.
+
+The concept \code{Monoid} tests whether there exist appropriate definitions of
+\code{mempty} and \code{mappend} for a given type \code{M}.
+
+An instantiation of the Monoid concept can be accomplished by providing
+appropriate specializations and overloads:
+
+\begin{snip}{cpp}
+template<>
+struct mempty<std::string> {
+    static std::string value() { return ""; }
+};
+
+template<>
+std::string mappend(std::string s1, std::string s2) {
+    return s1 + s2;
+}
+\end{snip}
+
+\section{Monoid as Category}
+
+That was the ``familiar'' definition of the monoid in terms of elements
+of a set. But as you know, in category theory we try to get away from
+sets and their elements, and instead talk about objects and morphisms.
+So let's change our perspective a bit and think of the application of
+the binary operator as ``moving'' or ``shifting'' things around the set.
+
+For instance, there is the operation of adding 5 to every natural
+number. It maps 0 to 5, 1 to 6, 2 to 7, and so on. That's a function
+defined on the set of natural numbers. That's good: we have a function
+and a set. In general, for any number n there is a function of adding $n$
+--- the ``adder'' of $n$.
+
+How do adders compose? The composition of the function that adds 5 with
+the function that adds 7 is a function that adds 12. So the composition
+of adders can be made equivalent to the rules of addition. That's good
+too: we can replace addition with function composition.
+
+But wait, there's more: There is also the adder for the neutral element,
+zero. Adding zero doesn't move things around, so it's the identity
+function in the set of natural numbers.
+
+Instead of giving you the traditional rules of addition, I could as well
+give you the rules of composing adders, without any loss of information.
+Notice that the composition of adders is associative, because the
+composition of functions is associative; and we have the zero adder
+corresponding to the identity function.
+
+An astute reader might have noticed that the mapping from integers to
+adders follows from the second interpretation of the type signature of
+\code{mappend} as \code{m -> (m -> m)}. It
+tells us that \code{mappend} maps an element of a monoid set to a
+function acting on that set.
+
+Now I want you to forget that you are dealing with the set of natural
+numbers and just think of it as a single object, a blob with a bunch of
+morphisms --- the adders. A monoid is a single object category. In fact
+the name monoid comes from Greek \emph{mono}, which means single. Every
+monoid can be described as a single object category with a set of
+morphisms that follow appropriate rules of composition.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.35\textwidth]{images/monoid.jpg}
+\end{figure}
+
+\noindent
+String concatenation is an interesting case, because we have a choice of
+defining right appenders and left appenders (or \emph{prependers}, if
+you will). The composition tables of the two models are a mirror reverse
+of each other. You can easily convince yourself that appending ``bar''
+after ``foo'' corresponds to prepending ``foo'' after prepending
+``bar''.
+
+You might ask the question whether every categorical monoid --- a
+one-object category --- defines a unique set-with-binary-operator
+monoid. It turns out that we can always extract a set from a
+single-object category. This set is the set of morphisms --- the adders
+in our example. In other words, we have the hom-set $\cat{M}(m, m)$ of the
+single object $m$ in the category $\cat{M}$. We can easily define a binary
+operator in this set: The monoidal product of two set-elements is the
+element corresponding to the composition of the corresponding morphisms.
+If you give me two elements of $\cat{M}(m, m)$ corresponding to $f$ and
+$g$, their product will correspond to the composition
+$f \circ g$. The composition always exists, because the source and the
+target for these morphisms are the same object. And it's associative by
+the rules of category. The identity morphism is the neutral element of
+this product. So we can always recover a set monoid from a category
+monoid. For all intents and purposes they are one and the same.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{images/monoidhomset.jpg}
+  \caption{Monoid hom-set seen as morphisms and as points in a set.}
+\end{figure}
+
+\noindent
+There is just one little nit for mathematicians to pick: morphisms don't
+have to form a set. In the world of categories there are things larger
+than sets. A category in which morphisms between any two objects form a
+set is called locally small. As promised, I will be mostly ignoring such
+subtleties, but I thought I should mention them for the record.
+
+A lot of interesting phenomena in category theory have their root in the
+fact that elements of a hom-set can be seen both as morphisms, which
+follow the rules of composition, and as points in a set. Here,
+composition of morphisms in $\cat{M}$ translates into monoidal product in the
+set $\cat{M}(m, m)$.
+
+\section{Challenges}
+
+\begin{enumerate}
+  \tightlist
+  \item
+        Generate a free category from:
+
+        \begin{enumerate}
+          \tightlist
+          \item
+                A graph with one node and no edges
+          \item
+                A graph with one node and one (directed) edge (hint: this edge can
+                be composed with itself)
+          \item
+                A graph with two nodes and a single arrow between them
+          \item
+                A graph with a single node and 26 arrows marked with the letters of
+                the alphabet: a, b, c \ldots{} z.
+        \end{enumerate}
+  \item
+        What kind of order is this?
+
+        \begin{enumerate}
+          \tightlist
+          \item
+                A set of sets with the inclusion relation: $A$ is included in $B$ if
+                every element of $A$ is also an element of $B$.
+          \item
+                C++ types with the following subtyping relation: \code{T1} is a subtype of
+                \code{T2} if a pointer to \code{T1} can be passed to a function that expects a
+                pointer to \code{T2} without triggering a compilation error.
+        \end{enumerate}
+  \item
+        Considering that \code{Bool} is a set of two values \code{True} and \code{False}, show that
+        it forms two (set-theoretical) monoids with respect to, respectively,
+        operator \code{\&\&} (AND) and \code{||} (OR).
+  \item
+        Represent the \code{Bool} monoid with the AND operator as a category: List
+        the morphisms and their rules of composition.
+  \item
+        Represent addition modulo 3 as a monoid category.
+\end{enumerate}

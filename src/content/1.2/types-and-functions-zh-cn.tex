@@ -41,157 +41,83 @@
 
 强静态类型常常成为借口, 用来逃避测试. 有时你听 Haskell 程序员说, ``如果它编译了, 它就是对的''. 当然,
 类型正确的程序不见得就能输出正确的结果. 根据研究, 这种轻率态度导致 Haskell 不像一般人想的那样产出高质量
-代码. 在商业化背景下, 修复 bug 的压力只能让质量差强人意. 这质量如何, 由软件开发的预算和用户忍受度有关,
+代码. 在商业化背景下, 修复 bug 的压力只能让质量差强人意. 这质量如何, 由软件开发的预算和用户忍受度决定,
 同编程语言和编程方法没什么关系. 更好的标准是去度量多少项目拉进度跳票, 或者大砍功能.
 
-As for the argument that unit testing can replace strong typing,
-consider the common refactoring practice in strongly typed languages:
-changing the type of an argument of a particular function. In a strongly
-typed language, it's enough to modify the declaration of that function
-and then fix all the build breaks. In a weakly typed language, the fact
-that a function now expects different data cannot be propagated to call
-sites. Unit testing may catch some of the mismatches, but testing is
-almost always a probabilistic rather than a deterministic process.
-Testing is a poor substitute for proof.
+至于说单元测试可以取代强类型. 考虑强类型语言中常见的重构流程: 改变函数的参数类型, 修复所有构建错误, 就够了.
+在弱类型语言中, 函数参数类型改变后, 这个函数的所有调用点都要改. 你可以用单元测试来发现这些不匹配, 但测试
+通常是概率的, 而不是确定的. 测试是证明的糟糕替代品.
 
-\section{What Are Types?}
+\section{什么是类型}
 
-The simplest intuition for types is that they are sets of values. The
-type \code{Bool} (remember, concrete types start with a capital letter
-in Haskell) is a two-element set of \code{True} and \code{False}.
-Type \code{Char} is a set of all Unicode characters like
-\code{a} or \code{ą}.
+简单直觉, 类型就是值的集合. 类型 \code{Bool} (记住, Haskell 中的具体类型以大写字母开头) 是 \code{True} 和
+\code{False} 的两个元素的集合. 类型 \code{Char} 是所有 Unicode 字符的集合, 比如 \code{a} 或者 \code{ą}.
 
-Sets can be finite or infinite. The type of \code{String}, which is a
-synonym for a list of \code{Char}, is an example of an infinite set.
+集合可以是有限的, 也可以是无限的. \code{String} 类型是 \code{Char} 的列表, 这是无限集合的例子.
 
-When we declare \code{x} to be an \code{Integer}:
+我们声明 \code{x} 是 \code{Integer} 类型:
 
 \src{snippet01}
-we are saying that it's an element of the set of integers.
-\code{Integer} in Haskell is an infinite set, and it can be used to do
-arbitrary precision arithmetic. There is also a finite-set \code{Int}
-that corresponds to machine type, just like the C++ \code{int}.
+等于说这是一个 Integer 集合中的元素.
+\code{Integer} 在 Haskell 中是一个无限集合, 可以用来做任意精度的算术运算. 也有一个有限集合 \code{Int},
+对应机器类型, 就像 C++ 中的 \code{int}.
 
-There are some subtleties that make this identification of types and
-sets tricky. There are problems with polymorphic functions that involve
-circular definitions, and with the fact that you can't have a set of all
-sets; but as I promised, I won't be a stickler for math. The great thing
-is that there is a category of sets, which is called $\Set$, and
-we'll just work with it. In $\Set$, objects are sets and morphisms
-(arrows) are functions.
+说类型就是集合, 其实不太准确. 例如涉及循环定义的多态函数有问题, 集合论中也不允许出现所有集合的集合. 但已经说过,
+我们不会死究数学. 还好有一个集合的范畴, 叫做 $\Set$, 我们就用它. 在 $\Set$ 中, 物件是集合, 态射(箭头)是函数.
 
-$\Set$ is a very special category, because we can actually peek
-inside its objects and get a lot of intuitions from doing that. For
-instance, we know that an empty set has no elements. We know that there
-are special one-element sets. We know that functions map elements of one
-set to elements of another set. They can map two elements to one, but
-not one element to two. We know that an identity function maps each
-element of a set to itself, and so on. The plan is to gradually forget
-all this information and instead express all those notions in purely
-categorical terms, that is in terms of objects and arrows.
+$\Set$ 是一个特殊的范畴. 我们可以窥探它的物件, 从中得到启发. 例如, 其中有没有元素的空集合. 还有单元素的特殊集合.
+函数将一个集合的元素映射到另一个集合的元素. 它可以将两个元素映射到一个元素, 但不能将一个元素映射到两个元素.单位函数
+将集合的每个元素映射到它自己, 等等. 下面打算逐渐忘掉这些, 用纯范畴论的语言表达这些概念, 也就是用物件和箭头.
 
-In the ideal world we would just say that Haskell types are sets and
-Haskell functions are mathematical functions between sets. There is just
-one little problem: A mathematical function does not execute any code
---- it just knows the answer. A Haskell function has to calculate the
-answer. It's not a problem if the answer can be obtained in a finite
-number of steps --- however big that number might be. But there are some
-calculations that involve recursion, and those might never terminate. We
-can't just ban non-terminating functions from Haskell because
-distinguishing between terminating and non-terminating functions is
-undecidable --- the famous halting problem. That's why computer
-scientists came up with a brilliant idea, or a major hack, depending on
-your point of view, to extend every type by one more special value
-called the \newterm{bottom} and denoted by \code{\_|\_}, or
-Unicode $\bot$. This ``value'' corresponds to a non-terminating computation.
-So a function declared as:
+如果能说 Haskell 的类型就是集合, Haskell 的函数就是集合上的函数, 那就太好了. 但有个小问题: 数学函数不执行代码
+--- 它就是一个解. Haskell 函数必须计算解. 如果解可以在有限步骤内得到, 那就没问题 --- 不论数字多大, 但有些
+计算涉及递归, 或许就不会终止了. 我们不能排除不终止的函数, 因为判断终止性是不可判定的 --- 著名的停机问题. 所以
+计算机科学家提出一个好主意, 或者说是一个大 Hack(你怎么看?), 就是把每个类型扩展一个特殊值, 叫做 \newterm{bottom},
+用 \code{\_|\_} 表示, 或者 Unicode $\bot$. 这个 ``值'' 对应一个不终止的计算. 所以一个函数:
 
 \src{snippet02}
-may return \code{True}, \code{False}, or \code{\_|\_};
-the latter meaning that it would never terminate.
+可以返回 \code{True}, \code{False}, 或者 \code{\_|\_}; 后者意味着它永远不终止.
 
-Interestingly, once you accept the bottom as part of the type system, it
-is convenient to treat every runtime error as a bottom, and even allow
-functions to return the bottom explicitly. The latter is usually done
-using the expression \code{undefined}, as in:
+很有意思, 一旦接受 \code{\_|\_} 是类型系统的一部分, 就可以方便地把每个运行时错误都当作 \code{\_|\_}, 甚至允许
+函数显式返回 \code{\_|\_}. 后者通常用 \code{undefined} 表示:
 
 \src{snippet03}
-This definition type checks because \code{undefined} evaluates to
-bottom, which is a member of any type, including \code{Bool}. You can
-even write:
+这个定义是类型正确的, 因为 \code{undefined} 求值为 bottom, 它是任何类型的元素, 包括 \code{Bool}. 你甚至可以写:
 
 \src{snippet04}
-(without the \code{x}) because the bottom is also a member of the type
-\code{Bool -> Bool}.
+(没有 \code{x}) 因为 bottom 也是 \code{Bool -> Bool} 类型的成员.
 
-Functions that may return bottom are called partial, as opposed to total
-functions, which return valid results for every possible argument.
+会返回 bottom 的函数叫做 \newterm{partial}, 与之相对的是 \newterm{total} 函数, 它对每个可能的参数都返回有效结果.
 
-Because of the bottom, you'll see the category of Haskell types and
-functions referred to as $\Hask$ rather than $\Set$. From
-the theoretical point of view, this is the source of never-ending
-complications, so at this point I will use my butcher's knife and
-terminate this line of reasoning. From the pragmatic point of view, it's
-okay to ignore non-terminating functions and bottoms, and treat
-$\Hask$ as bona fide $\Set$.\footnote{Nils Anders Danielsson,
+因为存在 bottom, 所以 Haskell 类型与函数组成的范畴不是 $\Set$, 而是 $\Hask$. 这里很快要出现复杂的理论问题, 所以我
+要就此打住. 从实用角度看, 忽略 bottom, 把 $\Hask$ 当作 $\Set$ 就行. \footnote{Nils Anders Danielsson,
   John Hughes, Patrik Jansson, Jeremy Gibbons, \href{http://www.cs.ox.ac.uk/jeremy.gibbons/publications/fast+loose.pdf}{
-    Fast and Loose Reasoning is Morally Correct}. This paper provides justification for ignoring bottoms in most contexts.}
+    Fast and Loose Reasoning is Morally Correct}. 这篇论文证明了在大多数情况下忽略 bottom 是合理的.}
 
-\section{Why Do We Need a Mathematical Model?}
+\section{为什么我们需要数学模型?}
 
-As a programmer you are intimately familiar with the syntax and grammar
-of your programming language. These aspects of the language are usually
-described using formal notation at the very beginning of the language
-spec. But the meaning, or semantics, of the language is much harder to
-describe; it takes many more pages, is rarely formal enough, and almost
-never complete. Hence the never ending discussions among language
-lawyers, and a whole cottage industry of books dedicated to the exegesis
-of the finer points of language standards.
+当程序员的都熟悉编程语言的词法和语法. 这些通常在语言规格的开头就介绍了. 语言规格却很难描述语言的语义; 要用更多页,
+而且不算形式化, 也不完备. 这激发语言律师无尽的争论, 争论的结果: 一大批书籍专门讨论语言规格的细节.
 
-There are formal tools for describing the semantics of a language but,
-because of their complexity, they are mostly used with simplified
-academic languages, not real-life programming behemoths. One such tool
-called \newterm{operational semantics} describes the mechanics of program
-execution. It defines a formalized idealized interpreter. The semantics
-of industrial languages, such as C++, is usually described using
-informal operational reasoning, often in terms of an ``abstract
-machine.''
+语义确实可以被形式化工具描述. 但太复杂了, 只能用在简化的学术语言上, 而不是真实的工业语言. 一个叫做
+\newterm{operational semantics(操作语义)} 的形式化工具描述了程序执行的机制. 它定义了一个解释器,
+是形式化的, 不过也是理想化的. C++ 这类产业语言的语义通常用非形式化的操作推理描述, 像 ``抽象机''.
 
-The problem is that it's very hard to prove things about programs using
-operational semantics. To show a property of a program you essentially
-have to ``run it'' through the idealized interpreter.
+问题是用操作语义证明程序的性质很难. 要展示一个程序的性质, 你必须 ``运行'' 理想化的解释器.
 
-It doesn't matter that programmers never perform formal proofs of
-correctness. We always ``think'' that we write correct programs. Nobody
-sits at the keyboard saying, ``Oh, I'll just throw a few lines of code
-and see what happens.'' We think that the code we write will perform
-certain actions that will produce desired results. We are usually quite
-surprised when it doesn't. That means we do reason about programs we
-write, and we usually do it by running an interpreter in our heads. It's
-just really hard to keep track of all the variables. Computers are good
-at running programs --- humans are not! If we were, we wouldn't need
-computers.
+程序员从来不证明正确性, 这无关紧要. 我们总 ``觉得'' 我们写的程序正确. 没人坐在键盘前面说, ``我随便写几行代码,
+看看结果如何.'' 我们总觉得写的代码会做正确的事情, 得到正确的结果. 没这样倒是奇怪了. 这意味着我们确实在推理
+我们的程序, 用脑中的解释器. 但是很难跟踪所有变量. 计算机擅长运行程序, 人类不擅长. 如果我们擅长, 就不需要计算机了.
 
-But there is an alternative. It's called \newterm{denotational semantics}
-and it's based on math. In denotational semantics every programming
-construct is given its mathematical interpretation. With that, if you
-want to prove a property of a program, you just prove a mathematical
-theorem. You might think that theorem proving is hard, but the fact is
-that we humans have been building up mathematical methods for thousands
-of years, so there is a wealth of accumulated knowledge to tap into.
-Also, as compared to the kind of theorems that professional
-mathematicians prove, the problems that we encounter in programming are
-usually quite simple, if not trivial.
+但还有一个选择. 叫做 \newterm{denotational semantics(指称语义)}, 它基于数学. 在指称语义中, 每个编程结构都有
+数学解释. 有了这个, 如果你想证明程序的性质, 只要证明一个数学定理就行了. 你也许觉得证明定理很难, 但在证明定理上人们知识丰富,
+毕竟已经积累上千年了. 而且, 和专业数学家证明的定理相比, 我们编程时遇到的问题通常很简单而显然.
 
-Consider the definition of a factorial function in Haskell, which is a
-language quite amenable to denotational semantics:
+考虑下面的 Haskell 阶乘函数定义, Haskell 很适合指称语义:
 
 \src{snippet05}
-The expression \code{{[}1..n{]}} is a list of integers from \code{1} to \code{n}.
-The function \code{product} multiplies all elements of a list. That's
-just like a definition of factorial taken from a math text. Compare this
-with C:
+表达式 \code{[1..n]} 是一个从 \code{1} 到 \code{n} 的整数列表. 函数 \code{product} 计算列表中所有元素的乘积.
+这和数学教科书中的阶乘定义一样. 与之对比 C 语言:
 
 \begin{snip}{c}
 int fact(int n) {
@@ -202,167 +128,99 @@ int fact(int n) {
     return result;
 }
 \end{snip}
-Need I say more?
+还用多说吗?
 
-Okay, I'll be the first to admit that this was a cheap shot! A factorial
-function has an obvious mathematical denotation. An astute reader might
-ask: What's the mathematical model for reading a character from the
-keyboard or sending a packet across the network? For the longest time
-that would have been an awkward question leading to a rather convoluted
-explanation. It seemed like denotational semantics wasn't the best fit
-for a considerable number of important tasks that were essential for
-writing useful programs, and which could be easily tackled by
-operational semantics. The breakthrough came from category theory.
-Eugenio Moggi discovered that computational effect can be mapped to
-monads. This turned out to be an important observation that not only
-gave denotational semantics a new lease on life and made pure functional
-programs more usable, but also shed new light on traditional
-programming. I'll talk about monads later, when we develop more
-categorical tools.
+好吧, 我承认这有些取巧. 阶乘函数有直白的数学定义. 敏锐的读者也许会问: 数学模型怎么描述从键盘读取字符, 或者
+通过网络发送数据包? 一直以来这都是个棘手的问题, 也是一个复杂的解释. 似乎指称语义不适合处理许多重要的任务,
+而操作语义可以. 但是, 有了范畴论, 一切都变了. Eugenio Moggi 发现计算效果可以映射到 \newterm{monad(单子)}.
+这是一个重要的发现, 不仅让指称语义重获新生, 也让纯函数式程序更易用, 同时也让传统编程方法有了新的视角. 之后有了
+更多范畴论工具之后, 我回头再讲单子.
 
-One of the important advantages of having a mathematical model for
-programming is that it's possible to perform formal proofs of
-correctness of software. This might not seem so important when you're
-writing consumer software, but there are areas of programming where the
-price of failure may be exorbitant, or where human life is at stake. But
-even when writing web applications for the health system, you may
-appreciate the thought that functions and algorithms from the Haskell
-standard library come with proofs of correctness.
+有了编程的数学模型, 就可以形式化证明程序是正确的. 对娱乐软件来说好像没用, 但如果故障的代价很高, 例如在人命关天
+的医疗软件中, 你也许就想用 Haskell 标准库中的函数, 因为它们都证明了正确.
 
-\section{Pure and Dirty Functions}
+\section{纯函数和脏函数}
 
-The things we call functions in C++ or any other imperative language,
-are not the same things mathematicians call functions. A mathematical
-function is just a mapping of values to values.
+C++ 之类命令式语言的函数不是数学函数. 数学函数只是值到值的映射而已.
 
-We can implement a mathematical function in a programming language: Such
-a function, given an input value will calculate the output value. A
-function to produce a square of a number will probably multiply the
-input value by itself. It will do it every time it's called, and it's
-guaranteed to produce the same output every time it's called with the
-same input. The square of a number doesn't change with the phases of the
-Moon.
+可以在任何编程语言中实现数学函数: 这个函数, 给定输入, 计算输出. 平方函数会把输入乘以自己, 每次都这样,
+每次的结果都一样. 结果不会因月相而变.
 
-Also, calculating the square of a number should not have a side effect
-of dispensing a tasty treat for your dog. A ``function'' that does that
-cannot be easily modelled as a mathematical function.
+另外, 计算数字平方也不会产生副作用, 例如给狗狗发零食. 做这种事的 ``函数'' 不能轻易建模为数学函数.
 
-In programming languages, functions that always produce the same result
-given the same input and have no side effects are called \newterm{pure
-  functions}. In a pure functional language like Haskell all functions are
-pure. Because of that, it's easier to give these languages denotational
-semantics and model them using category theory. As for other languages,
-it's always possible to restrict yourself to a pure subset, or reason
-about side effects separately. Later we'll see how monads let us model
-all kinds of effects using only pure functions. So we really don't lose
-anything by restricting ourselves to mathematical functions.
+编程语言中, 把这样相同输入总是得到相同输出的函数叫做\newterm{pure functions 纯函数}. 在像
+Haskell 的纯函数式语言中, 所有函数都是纯函数. 所以这些语言很容易有指称语义, 也很容易用数学模型描述.
+其他语言也可以只用纯函数部分, 或者单独考虑副作用. 之后我们会看到, 单子让我们用纯函数就能模拟所有副作用.
+所以我们只用数学函数也不会丢掉什么.
 
-\section{Examples of Types}
+\section{类型举例}
 
-Once you realize that types are sets, you can think of some rather
-exotic types. For instance, what's the type corresponding to an empty
-set? No, it's not C++ \code{void}, although this type \emph{is} called
-\code{Void} in Haskell. It's a type that's not inhabited by any
-values. You can define a function that takes \code{Void}, but you can
-never call it. To call it, you would have to provide a value of the type
-\code{Void}, and there just aren't any. As for what this function can
-return, there are no restrictions whatsoever. It can return any type
-(although it never will, because it can't be called). In other words
-it's a function that's polymorphic in the return type. Haskellers have a
-name for it:
+意识到类型就是集合, 你就可以考虑一些奇怪的类型. 例如, 空集合对应什么类型? 不, 不是 C++ 的 \code{void},
+虽然 \code{Void} 是 Haskell 中对空集合类型的记号. 这个类型没有任何值. 可以定义一个函数, 参数是 \code{Void},
+但你调用不了它. 要调用它, 你必须提供一个 \code{Void} 类型的值, 但这个值没有. 至于这个函数返回什么, 没有约束,
+随意, 反正也永远不会返回(因为不能调用). 换句话说, 这是个返回值多态的函数. Haskell 程序员给它起了个名字:
 
 \src{snippet06}
-(Remember, \code{a} is a type variable that can stand for any type.)
-The name is not coincidental. There is deeper interpretation of types
-and functions in terms of logic called the Curry-Howard isomorphism. The
-type \code{Void} represents falsity, and the type of the function
-\code{absurd} corresponds to the statement that from falsity follows
-anything, as in the Latin adage ``ex falso sequitur quodlibet.''
 
-Next is the type that corresponds to a singleton set. It's a type that
-has only one possible value. This value just ``is.'' You might not
-immediately recognize it as such, but that is the C++ \code{void}.
-Think of functions from and to this type. A function from \code{void}
-can always be called. If it's a pure function, it will always return the
-same result. Here's an example of such a function:
+(记住, \code{a} 是一个类型变量, 可以代表任何类型.) 这个名字不是巧合. 用叫做 Curry-Howard 同构的逻辑,
+类型和函数有更深层的联系. 类型 \code{Void} 表示假, 函数 \code{absurd} 的类型对应那句话: 假蕴涵一切,
+正如拉丁格言 ``ex falso sequitur quodlibet''.
+
+接下来是单例集合对应的类型. 这个类型只能有一个值. 这个值就是 ``有''. 你可能还看不出来, 但这就是 C++
+的 \code{void}. 想想这个类型的函数. 从 \code{void} 出发到 $A$ 的函数总是可以调用. 如果它是纯函数,
+它总是返回相同的结果. 例如:
 
 \begin{snip}{c}
 int f44() { return 44; }
 \end{snip}
-You might think of this function as taking ``nothing'', but as we've
-just seen, a function that takes ``nothing'' can never be called because
-there is no value representing ``nothing.'' So what does this function
-take? Conceptually, it takes a dummy value of which there is only one
-instance ever, so we don't have to mention it explicitly. In Haskell,
-however, there is a symbol for this value: an empty pair of parentheses,
-\code{()}. So, by a funny coincidence (or is it a coincidence?), the
-call to a function of void looks the same in C++ and in Haskell. Also,
-because of the Haskell's love of terseness, the same symbol \code{()}
-is used for the type, the constructor, and the only value corresponding
-to a singleton set. So here's this function in Haskell:
+
+你也许觉得这函数接受 ``无'', 但我们说过, 接受 ``无'' 的函数没法调用, 因为不存在 ``无'' 的值. 那这个函数
+的参数到底是什么? 概念上, 它不过接受一个哑元, 这哑元只有一个实例, 所以我们不必显式地提及它. Haskell 中有个
+符号代表它: 一个空的括号, \code{()}. 很巧(真是巧合吗?), 有了这个记号以后, C++ 和 Haskell 中的 void 函数
+调用看起来一样. 另外, Haskell 喜欢简洁, 所以类型, 构造器, 单例唯一的值都用同一个符号 \code{()} 表示.
+所以看这个 Haskell 函数:
 
 \src{snippet07}
-The first line declares that \code{f44} takes the type \code{()},
-pronounced ``unit,'' into the type \code{Integer}. The second line
-defines \code{f44} by pattern matching the only constructor for unit,
-namely \code{()}, and producing the number 44. You call this function
-by providing the unit value \code{()}:
+
+第一行声明 \code{f44} 接受类型 \code{()}, 读作 ``unit'', 返回 \code{Integer} 类型. 第二行定义 \code{f44},
+模式匹配 unit 的唯一构造器, 也就是 \code{()}, 返回数字 44. 调用这个函数, 你必须提供 unit 值 \code{()}:
 
 \begin{snip}{c}
 f44 ()
 \end{snip}
-Notice that every function of unit is equivalent to picking a single
-element from the target type (here, picking the \code{Integer} 44). In
-fact you could think of \code{f44} as a different representation for
-the number 44. This is an example of how we can replace explicit mention
-of elements of a set by talking about functions (arrows) instead.
-Functions from unit to any type $A$ are in one-to-one correspondence with
-the elements of that set $A$.
 
-What about functions with the \code{void} return type, or, in Haskell,
-with the unit return type? In C++ such functions are used for side
-effects, but we know that these are not real functions in the
-mathematical sense of the word. A pure function that returns unit does
-nothing: it discards its argument.
+注意每一个 unit 的函数都等价于从目标类型中挑选一个元素(这里是挑选 \code{Integer} 44). 其实你可以
+把 \code{f44} 看作数字 44 的另一种表示. 这是我们用函数(箭头)代替集合元素的例子. 从 unit 到任何类型 $A$
+的函数和 $A$ 的元素一一对应.
 
-Mathematically, a function from a set $A$ to a singleton set maps every
-element of $A$ to the single element of that singleton set. For every $A$
-there is exactly one such function. Here's this function for
-\code{Integer}:
+那返回 \code{void}, 或者说返回 unit 的函数呢? 在 C++ 中, 这样的函数用于副作用, 但这不是恰当的数学函数.
+返回 unit 的纯函数什么也不做: 它仅仅丢弃参数.
+
+数学上说, 从集合 $A$ 到单元集合的函数把 $A$ 的每个元素映射到单例集合的唯一元素. 对每个 $A$
+恰好有一个这样的函数. 这是在 \code{Integer} 上的这个函数.
 
 \src{snippet08}
-You give it any integer, and it gives you back a unit. In the spirit of
-terseness, Haskell lets you use the wildcard pattern, the underscore,
-for an argument that is discarded. This way you don't have to invent a
-name for it. So the above can be rewritten as:
+给它任意整数, 就会返回给你一个 unit. 为了简洁, Haskell 让你用通配符 \code{\_} 表示丢弃的参数.
+这样你就不需要自己发明一个记号. 所以上面的可以重写为:
 
 \src{snippet09}
-Notice that the implementation of this function not only doesn't depend
-on the value passed to it, but it doesn't even depend on the type of the
-argument.
+留意, 这个函数的实现不仅不依赖于传给它的值, 甚至不依赖于参数的类型.
 
-Functions that can be implemented with the same formula for any type are
-called parametrically polymorphic. You can implement a whole family of
-such functions with one equation using a type parameter instead of a
-concrete type. What should we call a polymorphic function from any type
-to unit type? Of course we'll call it \code{unit}:
+对任何类型都有同样的解析式, 这样的函数叫做参数多态的函数. 你可以用一个类型参数而非具体类型实现一族这样的函数.
+我们如何称呼从任意类型映射到 unit 的函数呢? 当然是 \code{unit}:
 
 \src{snippet10}
-In C++ you would write this function as:
+在 C++ 中你这样写这个函数:
 
 \begin{snip}{cpp}
 template<class T>
 void unit(T) {}
 \end{snip}
-Next in the typology of types is a two-element set. In C++ it's called
-\code{bool} and in Haskell, predictably, \code{Bool}. The difference
-is that in C++ \code{bool} is a built-in type, whereas in Haskell it
-can be defined as follows:
+在类型的分类学中, 下一组是二元集合. 在 C++ 中, 这叫做 \code{bool}, 在 Haskell 中叫做 \code{Bool}.
+区别是在 C++ 中, \code{bool} 是内建类型, 而在 Haskell 中, 它可以这样定义:
 
 \src{snippet11}
-(The way to read this definition is that \code{Bool} is either
-\code{True} or \code{False}.) In principle, one should also be able
-to define a Boolean type in C++ as an enumeration:
+(读法: \code{Bool} 是 \code{True} 或 \code{False}.) 原则上大家也可以用枚举在 C++ 中定义布尔类型.
 
 \begin{snip}{cpp}
 enum bool {
@@ -370,50 +228,33 @@ enum bool {
     false
 };
 \end{snip}
-but C++ \code{enum} is secretly an integer. The C++11
-``\code{enum class}'' could have been used instead, but then you
-would have to qualify its values with the class name, as in
-\code{bool::true} and \code{bool::false}, not to mention having to
-include the appropriate header in every file that uses it.
 
-Pure functions from \code{Bool} just pick two values from the target
-type, one corresponding to \code{True} and another to \code{False}.
+但是 C++ \code{enum} 其实是整数. 也可以用 C++11 的 \code{enum class}, 但是这样你必须用类名限定值,
+例如 \code{bool::true} 和 \code{bool::false}, 何况每个文件都要包含相应的头文件.
 
-Functions to \code{Bool} are called \newterm{predicates}. For instance,
-the Haskell library \code{Data.Char} is full of predicates like
-\code{isAlpha} or \code{isDigit}. In C++ there is a similar library
-\code{} that defines, among others, \code{isalpha} and
-\code{isdigit}, but these return an \code{int} rather than a
-Boolean. The actual predicates are defined in \code{std::ctype} and
-have the form \code{ctype::is(alpha, c)}, \code{ctype::is(digit, c)}, etc.
+从 \code{Bool} 出发的纯函数只是从目标类型中挑选两个元素, 一个对应 \code{True}, 一个对应 \code{False}.
 
-\section{Challenges}
+映射到 \code{Bool} 的函数又叫做\newterm{predicate 谓词}. 例如, Haskell 库 \code{Data.Char} 里有很多谓词,
+例如 \code{isAlpha} 或者 \code{isDigit}. 在 C++ 中有类似的库, 有 \code{isalpha} 和 \code{isdigit},
+但是这些函数返回 \code{int} 而不是布尔值. 实际的谓词在 \code{std::ctype} 中定义, 有 \code{ctype::is(alpha, c)},
+\code{ctype::is(digit, c)} 等等.
+
+\section{挑战}
 
 \begin{enumerate}
   \tightlist
   \item
-        Define a higher-order function (or a function object) \code{memoize}
-        in your favorite language. This function takes a pure function
-        \code{f} as an argument and returns a function that behaves almost
-        exactly like \code{f}, except that it only calls the original
-        function once for every argument, stores the result internally, and
-        subsequently returns this stored result every time it's called with
-        the same argument. You can tell the memoized function from the
-        original by watching its performance. For instance, try to memoize a
-        function that takes a long time to evaluate. You'll have to wait for
-        the result the first time you call it, but on subsequent calls, with
-        the same argument, you should get the result immediately.
+        用你最喜欢的语言定义高阶函数(或者函数对象) \code{memoize}. 接受一个纯函数 \code{f} 作为参数, 返回一个
+        函数, 它和 \code{f} 几乎一样, 除了它只调用原函数一次, 把结果存起来, 然后每次参数一样的调用都返回存储的结果.
+        你可以通过观察性能来区分 memoized 和原函数. 例如, 试着 memoize 一个计算量很大的函数, 第一次调用时你要等
+        很久, 但后面每次调用都会立即返回结果.
   \item
-        Try to memoize a function from your standard library that you normally
-        use to produce random numbers. Does it work?
+        用上面的函数记录一个标准库的随机函数. 它还能正常工作吗?
   \item
-        Most random number generators can be initialized with a seed.
-        Implement a function that takes a seed, calls the random number
-        generator with that seed, and returns the result. Memoize that
-        function. Does it work?
+        许多随机数生成器用种子初始化. 实现一个函数, 接受一个种子, 调用随机数生成器, 返回结果. memoize 这个函数,
+        看看会发生什么?
   \item
-        Which of these C++ functions are pure? Try to memoize them and observe
-        what happens when you call them multiple times: memoized and not.
+        下面这些 C++ 函数中, 哪些是纯函数? 尝试 memoize 它们, 看看调用多次会发生什么? 会不会有不同的结果?
 
         \begin{enumerate}
           \tightlist
@@ -440,11 +281,8 @@ int f(int x) {
 \end{minted}
         \end{enumerate}
   \item
-        How many different functions are there from \code{Bool} to
-        \code{Bool}? Can you implement them all?
+        \code{Bool} 到 \code{Bool} 的函数有多少种? 你能实现吗?
   \item
-        Draw a picture of a category whose only objects are the types
-        \code{Void}, \code{()} (unit), and \code{Bool}; with arrows
-        corresponding to all possible functions between these types. Label the
-        arrows with the names of the functions.
+        画一个范畴, 它的物件是 \code{Bool} 和 \code{()} (unit), 箭头是类型之间可以存在的函数.
+        用函数名标记箭头.
 \end{enumerate}
