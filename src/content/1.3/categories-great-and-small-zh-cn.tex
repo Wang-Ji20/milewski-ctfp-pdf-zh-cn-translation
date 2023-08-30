@@ -76,54 +76,42 @@ $\cat{C}(a, a)$, 从 $a$ 到 $a$ 的态射集合, 它必须是单例集合, 只�
 
 Haskell 的类不像 C++ 那样具有侵入性. 定义一个新类型时, 你不必事先指定它的类. 你可以拖延, 后面再声明这类型
 是某个类的实例. 例如, 让我们声明\code{String}是一个幺半群, 提供\code{mempty}和\code{mappend}的实现
-(实际上, 这在标准 Prelude 中已经做过了):
+(实际上, 这在标准库 Prelude 中已经做过了):
 
 \src{snippet02}
 这里我们重用 \code{(++)} 列表连接运算符, 因为 \code{String} 只是字符列表.
 
-A word about Haskell syntax: Any infix operator can be turned into a
-two-argument function by surrounding it with parentheses. Given two
-strings, you can concatenate them by inserting \code{++} between them:
+再说几句 Haskell 语法: 任何中缀运算符都可以用括号包围, 变成一个二元函数. 给定两个字符串, 你可以在中间
+插入 \code{++} 来连接:
 
 \begin{snip}{haskell}
 "Hello " ++ "world!"
 \end{snip}
-or by passing them as two arguments to the parenthesized \code{(++)}:
+
+或者把它们作为两个参数传给括号中的 \code{(++)}:
 
 \begin{snip}{haskell}
 (++) "Hello " "world!"
 \end{snip}
-Notice that arguments to a function are not separated by commas or
-surrounded by parentheses. (This is probably the hardest thing to get
-used to when learning Haskell.)
+注意函数的参数不是用逗号分隔的, 也不用括号包围. (这可能是学习 Haskell 时最难适应的事情.)
 
-It's worth emphasizing that Haskell lets you express equality of
-functions, as in:
+强调下, Haskell 允许你表达函数相等, 就像这样:
 
 \begin{snip}{haskell}
 mappend = (++)
 \end{snip}
-Conceptually, this is different than expressing the equality of values
-produced by functions, as in:
+概念上, 这和表达函数的结果相同是不一样的. 那个是这样:
 
 \begin{snip}{haskell}
 mappend s1 s2 = (++) s1 s2
 \end{snip}
-The former translates into equality of morphisms in the category
-$\Hask$ (or $\Set$, if we ignore bottoms, which is the name
-for never-ending calculations). Such equations are not only more
-succinct, but can often be generalized to other categories. The latter
-is called \newterm{extensional} equality, and states the fact that for any
-two input strings, the outputs of \code{mappend} and \code{(++)} are
-the same. Since the values of arguments are sometimes called
-\newterm{points} (as in: the value of $f$ at point $x$), this is called
-point-wise equality. Function equality without specifying the arguments
-is described as \newterm{point-free}. (Incidentally, point-free equations
-often involve composition of functions, which is symbolized by a point,
-so this might be a little confusing to the beginner.)
+前者看作范畴 $\Hask$(忽略不中止计算, 也就是 bottom 的话, $Set$) 中的态射相等. 这个等式不仅更简明,
+而且还可以推广到其它范畴. 后者叫做\newterm{extension 外延}相等, 它断言对于任何两个输入字符串,
+\code{mappend} 和 \code{(++)} 的输出相同. 参数的值有时被称为\newterm{point 点}(比如: $f$ 在点 $x$ 的值),
+所以外延相等又可以叫做逐点相等. 与此相反, 前面不指名参数的相等是 \newterm{point-free 无点的}.
+(顺便说一句, 无点等式经常涉及函数的组合, 函数组合的符号却是一个点, 初学者可能有点费解.)
 
-The closest one can get to declaring a monoid in C++ would be to use the
-C++20 standard's concept feature.
+用 C++ 20 的概念也可以在 C++ 中得到类似的幺半群定义:
 
 \begin{snip}{cpp}
 template<class T>
@@ -138,18 +126,13 @@ concept Monoid = requires (M m) {
     { mappend(m, m) } -> std::same_as<M>;
 };
 \end{snip}
-The first definition is a structure meant to hold the neutral element for each
-specialization.
+第一个定义是一个结构体, 用来保存每个特化的幺元.
 
-The keyword \code{delete} means that there is no default value
-defined: It will have to be specified on a case-by-case basis.
-Similarly, there is no default for \code{mappend}.
+关键字 \code{delete} 删除默认值: 每个情况下都必须手动特化. 所以, \code{mappend} 没有默认值.
 
-The concept \code{Monoid} tests whether there exist appropriate definitions of
-\code{mempty} and \code{mappend} for a given type \code{M}.
+概念 \code{Monoid} 测试对类型 \code{M} 是否存在适当的 \code{mempty} 和 \code{mappend} 定义.
 
-An instantiation of the Monoid concept can be accomplished by providing
-appropriate specializations and overloads:
+只要写出合适的特化和重载, 就可以实例化 \code{Monoid} 概念:
 
 \begin{snip}{cpp}
 template<>
@@ -163,47 +146,30 @@ std::string mappend(std::string s1, std::string s2) {
 }
 \end{snip}
 
-\section{Monoid as Category}
+\section{幺半群作为范畴}
 
-That was the ``familiar'' definition of the monoid in terms of elements
-of a set. But as you know, in category theory we try to get away from
-sets and their elements, and instead talk about objects and morphisms.
-So let's change our perspective a bit and think of the application of
-the binary operator as ``moving'' or ``shifting'' things around the set.
+以上就是``熟悉的''集合论中的幺半群. 但你知道, 范畴论中我们要丢掉集合, 元素; 用物件和态射代替. 所以我们
+换一个思路, 把二元运算看作``移动''或``转移''集合中的元素.
 
-For instance, there is the operation of adding 5 to every natural
-number. It maps 0 to 5, 1 to 6, 2 to 7, and so on. That's a function
-defined on the set of natural numbers. That's good: we have a function
-and a set. In general, for any number n there is a function of adding $n$
---- the ``adder'' of $n$.
+例如, 每个自然数对应一个 +5 的操作. 它把 0 映射到 5, 1 映射到 6, 2 映射到 7, 以此类推. 这是一个定义在
+自然数集合上的函数. 好, 有一个函数, 有一个集合. 一般来说, 对于任何数 $n$, 都有一个加 $n$ 的函数 ---
+$n$ 的``加法器''.
 
-How do adders compose? The composition of the function that adds 5 with
-the function that adds 7 is a function that adds 12. So the composition
-of adders can be made equivalent to the rules of addition. That's good
-too: we can replace addition with function composition.
+加法器怎么组合? 加 5 的函数与加 7 的函数的组合成加 12 的函数. 所以加法器的组合可以等价于加法的规则.
+这也很好: 我们可以用函数组合来代替加法.
 
-But wait, there's more: There is also the adder for the neutral element,
-zero. Adding zero doesn't move things around, so it's the identity
-function in the set of natural numbers.
+等等: 还有幺元的加法器, 零加法器. 加零不会移动元素, 所以它是自然数集合中的单位函数.
 
-Instead of giving you the traditional rules of addition, I could as well
-give you the rules of composing adders, without any loss of information.
-Notice that the composition of adders is associative, because the
-composition of functions is associative; and we have the zero adder
-corresponding to the identity function.
+扔下传统的加法规则, 只用组合加法器的规则, 也没有任何问题. 注意加法器的组合服从结合律, 因为函数的组合
+服从结合律. 而且我们还有零加法器, 这是个单位函数.
 
-An astute reader might have noticed that the mapping from integers to
-adders follows from the second interpretation of the type signature of
-\code{mappend} as \code{m -> (m -> m)}. It
-tells us that \code{mappend} maps an element of a monoid set to a
-function acting on that set.
+敏锐的读者也许已经发现, 从整数到加法器的映射遵循 \code{mappend} 的第二种解释, 即 \code{m -> (m -> m)}.
+它告诉我们, \code{mappend} 把幺半群中的元素映射到作用在幺半群上的函数.
 
-Now I want you to forget that you are dealing with the set of natural
-numbers and just think of it as a single object, a blob with a bunch of
-morphisms --- the adders. A monoid is a single object category. In fact
-the name monoid comes from Greek \emph{mono}, which means single. Every
-monoid can be described as a single object category with a set of
-morphisms that follow appropriate rules of composition.
+忘掉你在自然数集合上吧. 把它想成一个单一物件, 一个 blob, 有一堆态射 --- 加法器. 幺半群是一个单一物件的
+范畴. 事实上, ``monoid'' 这个名字来自希腊语 \emph{mono}, 意思是单一. 每个幺半群都可以描述为一个单一物件
+的范畴, 有一堆态射, 服从一些组合的规则.
+
 
 \begin{figure}[H]
   \centering
@@ -211,88 +177,65 @@ morphisms that follow appropriate rules of composition.
 \end{figure}
 
 \noindent
-String concatenation is an interesting case, because we have a choice of
-defining right appenders and left appenders (or \emph{prependers}, if
-you will). The composition tables of the two models are a mirror reverse
-of each other. You can easily convince yourself that appending ``bar''
-after ``foo'' corresponds to prepending ``foo'' after prepending
-``bar''.
+字符串拼接是个有意思的例子, 因为需要考虑两种追加器: 左追加器(或者\emph{前追加器})和右追加器. 这两个模型的
+组合表镜像相反. 在 ``foo'' 后追加 ``bar'' 就是 ``bar'' 前追加 ``foo''.
 
-You might ask the question whether every categorical monoid --- a
-one-object category --- defines a unique set-with-binary-operator
-monoid. It turns out that we can always extract a set from a
-single-object category. This set is the set of morphisms --- the adders
-in our example. In other words, we have the hom-set $\cat{M}(m, m)$ of the
-single object $m$ in the category $\cat{M}$. We can easily define a binary
-operator in this set: The monoidal product of two set-elements is the
-element corresponding to the composition of the corresponding morphisms.
-If you give me two elements of $\cat{M}(m, m)$ corresponding to $f$ and
-$g$, their product will correspond to the composition
-$f \circ g$. The composition always exists, because the source and the
-target for these morphisms are the same object. And it's associative by
-the rules of category. The identity morphism is the neutral element of
-this product. So we can always recover a set monoid from a category
-monoid. For all intents and purposes they are one and the same.
+你也许会问, 是不是每个范畴幺半群 --- 一个一物件的范畴 --- 都能对应上一个用集合论定义的幺半群? \footnote{以加法
+幺半群为例.自然数集合有无限元素, 而范畴只有一个物件. 这看上去有些奇怪, 元素和物件不是一一对应的吗? --译注}
+答案是肯定的. 我们总可以从单物件范畴中提取一个集合, 这个集合是态射的集合 --- 我们的例子中是加法器.
+换句话说, 在只有单一物件 $m$ 的范畴 $\cat{M}$ 中, 有一个 hom-集 $\cat{M}(m, m)$. 在这个集合上很容易
+定义一个二元运算: 两个元素的幺半群积就是两个态射的组合. 给我两个 $\cat{M}(m, m)$ 中的元素, $f$ 和 $g$,
+它们的积就是 $f \circ g$. 这个积总是存在的, 因为这两个态射的源和目标都是 $m$. 而且它是结合的, 因为
+范畴的组合是结合的. 这个运算的幺元就是单位态射. 因此总可以从范畴论描述的幺半群中提取一个集合论描述的幺半群.
+这两种方式都描述了相同的东西. 完全相同.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.4\textwidth]{images/monoidhomset.jpg}
-  \caption{Monoid hom-set seen as morphisms and as points in a set.}
+  \caption{幺半群 hom-集 可以看作态射, 也可以看作集合中的点}
 \end{figure}
 
 \noindent
-There is just one little nit for mathematicians to pick: morphisms don't
-have to form a set. In the world of categories there are things larger
-than sets. A category in which morphisms between any two objects form a
-set is called locally small. As promised, I will be mostly ignoring such
-subtleties, but I thought I should mention them for the record.
+还剩下给数学家的一点小问题: 态射不必形成一个集合. 范畴论的世界里有比集合更大的东西. 一个范畴中, 若任意两个物件之
+间的态射都形成一个集合, 称这个范畴\newterm{locally small 局部小}. 我确实说过会忽略这些细节, 但还是应该提一下.
 
-A lot of interesting phenomena in category theory have their root in the
-fact that elements of a hom-set can be seen both as morphisms, which
-follow the rules of composition, and as points in a set. Here,
-composition of morphisms in $\cat{M}$ translates into monoidal product in the
-set $\cat{M}(m, m)$.
+范畴论中很多有趣的现象都源于这样一个事实: hom-集的元素既可以看作态射, 也可以看作集合中的点. 在范畴论中, 它服从组合
+的规则. 这里, $\cat{M}$ 中的态射组合对应于 $\cat{M}(m, m)$ 中的幺半群积.
 
-\section{Challenges}
+\section{挑战}
 
 \begin{enumerate}
   \tightlist
   \item
-        Generate a free category from:
+        构造自由范畴:
 
         \begin{enumerate}
           \tightlist
           \item
-                A graph with one node and no edges
+                一个节点, 没有边的图.
           \item
-                A graph with one node and one (directed) edge (hint: this edge can
-                be composed with itself)
+                一个节点, 一条有向边的图. (提示: 这条边可以和自己组合)
           \item
-                A graph with two nodes and a single arrow between them
+                这个图有两个节点, 它们之间有一个箭头.
           \item
-                A graph with a single node and 26 arrows marked with the letters of
-                the alphabet: a, b, c \ldots{} z.
+                这个图有一个节点. 26 个箭头, 分别标有字母 a, b, c \ldots{} z.
         \end{enumerate}
   \item
-        What kind of order is this?
+        这是什么序?
 
         \begin{enumerate}
           \tightlist
           \item
-                A set of sets with the inclusion relation: $A$ is included in $B$ if
-                every element of $A$ is also an element of $B$.
+                有一个集合的集合. 这个集合上定义包含关系: $A$ 包含 $B$ 当 $A$ 中的每个元素也在 $B$ 中.
           \item
-                C++ types with the following subtyping relation: \code{T1} is a subtype of
-                \code{T2} if a pointer to \code{T1} can be passed to a function that expects a
-                pointer to \code{T2} without triggering a compilation error.
+                C++ 类型上的子类型关系: \code{T1} 是 \code{T2} 的子类型, 当 \code{T1} 的指针可以传给
+                期望 \code{T2} 指针的函数, 而不会触发编译错误.
         \end{enumerate}
   \item
-        Considering that \code{Bool} is a set of two values \code{True} and \code{False}, show that
-        it forms two (set-theoretical) monoids with respect to, respectively,
-        operator \code{\&\&} (AND) and \code{||} (OR).
+        考虑 \code{Bool} 类型, 它有两个值 \code{True} 和 \code{False}. 证明它上面有两个幺半群, 分别
+        用 \code{\&\&} (AND) 和 \code{||} (OR) 作为二元运算.
   \item
-        Represent the \code{Bool} monoid with the AND operator as a category: List
-        the morphisms and their rules of composition.
+        用范畴来表示 \code{Bool} 上有 \code{AND} 运算的幺半群: 列出其态射和组合规则.
   \item
-        Represent addition modulo 3 as a monoid category.
+        把加法模 3 表示为一个幺半群.
 \end{enumerate}

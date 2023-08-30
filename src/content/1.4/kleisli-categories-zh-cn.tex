@@ -1,0 +1,322 @@
+% !TEX root = ../../ctfp-print.tex
+
+\lettrine[lhang=0.17]{你}{已经看到} 类型和纯函数可以建模为范畴. 我还提到一种办法, 可以建模副作用, 或者非纯函数.
+看一个例子: 记录或追踪其执行流程的函数. 这些函数在命令式语言中靠改变全局状态来实现, 例如:
+
+\begin{snip}{cpp}
+string logger;
+
+bool negate(bool b) {
+    logger += "Not so! ";
+    return !b;
+}
+\end{snip}
+你知道这不是一个纯函数, 因为它的备忘化版本不能产生日志. 这个函数有\newterm{side effects 副作用}.
+
+现在我们往往不愿意修改全局状态 --- 不仅因为并发的时候很棘手. 你也不会在库中写这样的代码.
+
+幸好可以把这个函数变成纯函数. 只要把日志传进传出. 加一个字符串参数, 然后把结果和更新日志打包输出.
+
+\begin{snip}{cpp}
+pair<bool, string> negate(bool b, string logger) {
+    return make_pair(!b, logger + "Not so! ");
+}
+\end{snip}
+这是纯函数, 没有副作用. 每次调用, 传入相同的参数, 返回相同的结果. 如果需要, 可以备忘化. 不过, 因为
+日志是累积的, 你必须备忘化所有可能的历史, 以便给定的调用. 可以设计一个单独的备忘化条目:
+
+\begin{snip}{cpp}
+negate(true, "It was the best of times. ");
+\end{snip}
+和
+
+\begin{snip}{cpp}
+negate(true, "It was the worst of times. ");
+\end{snip}
+诸如此类.
+
+这也不是一个好的库函数接口. 返回值里的字符串可以忽略, 这倒无所谓. 但要传入一个字符串, 就很不方便.
+
+有没有更好的办法, 不那么有侵入性? 有没有办法分离责任? 这个简单的例子里, 函数 \code{negate} 的主要目的是
+把布尔值变成另一个. 日志是次要的. 当然, 这个函数的信息是独有的, 但是聚合日志的任务是另一个责任. 我们依然希望
+函数产生字符串, 但是不要求它产生日志. 所以这有一个折中的解决方案:
+
+\begin{snip}{cpp}
+pair<bool, string> negate(bool b) {
+    return make_pair(!b, "Not so! ");
+}
+\end{snip}
+想法是日志会在函数调用\emph{之间}聚合.
+
+为看看怎么聚合, 换一个更实际的例子. 有一个函数, 把一个字符串中所有小写字母变成大写, 然后返回:
+
+\begin{snip}{cpp}
+string toUpper(string s) {
+    string result;
+    int (*toupperp)(int) = &toupper; // toupper is overloaded
+    transform(begin(s), end(s), back_inserter(result), toupperp);
+    return result;
+}
+\end{snip}
+另一个函数把字符串分割成一组字符串, 以空格为界:
+
+\begin{snip}{cpp}
+vector<string> toWords(string s) {
+    return words(s);
+}
+\end{snip}
+实际工作在辅助函数 \code{words} 中完成:
+
+\begin{snip}{cpp}
+vector<string> words(string s) {
+    vector<string> result{""};
+    for (auto i = begin(s); i != end(s); ++i)
+    {
+        if (isspace(*i))
+            result.push_back("");
+        else
+            result.back() += *i;
+    }
+    return result;
+}
+\end{snip}
+
+我们想改一下函数 \code{toUpper} 和 \code{toWords}, 让它们在返回值上额外携带一个字符串消息.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.3\textwidth]{images/piggyback.jpg}
+\end{figure}
+\noindent
+我们会``装饰''这些函数的返回值. 用泛型, 我们定义一个模板 \code{Writer} 封装一对值, 第一个分量是类型任意,
+第二个分量是字符串:
+
+\begin{snip}{cpp}
+template<class A>
+using Writer = pair<A, string>;
+\end{snip}
+下面是装饰过的函数:
+
+\begin{snip}{cpp}
+Writer<string> toUpper(string s) {
+    string result;
+    int (*toupperp)(int) = &toupper;
+    transform(begin(s), end(s), back_inserter(result), toupperp);
+    return make_pair(result, "toUpper ");
+}
+
+Writer<vector<string>> toWords(string s) {
+    return make_pair(words(s), "toWords ");
+}
+\end{snip}
+我们想要把这两个函数组合成一个新的装饰函数, 把字符串变成大写, 然后分割成一组单词, 同时记录这两个操作.
+下面是我们的做法:
+
+\begin{snip}{cpp}
+Writer<vector<string>> process(string s) {
+    auto p1 = toUpper(s);
+    auto p2 = toWords(p1.first);
+    return make_pair(p2.first, p1.second + p2.second);
+}
+\end{snip}
+我们完成了目标: 聚合日志不再是各个函数的责任. 它们只产生自己的消息, 然后外部把它们连接成一个更大的日志.
+
+想一想, 如果整个函数都这样写, 那绝对是噩梦. 无数重复易错的代码. 但我们程序员知道怎么处理重复: 用抽象!
+就是说, 不要手工做这些事情 --- 我们要抽象\newterm{函数组合}本身. 但组合是范畴论的本质, 所以在写更多代码之前,
+让我们从范畴论的角度分析一下问题.
+
+\section{写者范畴}
+
+装饰函数的返回值, 来做一些额外的功能, 这个思想非常有成效. 我们会看到更多例子. 我们的起点还是类型和函数这些老范畴.
+我们把类型看作物件, 但让态射是装饰过的函数.
+
+例如, 假设我们想装饰从 \code{int} 到 \code{bool} 的函数 \code{isEven}. 我们把它变成一个态射,
+用装饰过的函数表示. 重点是这个态射依然是从 \code{int} 到 \code{bool} 的箭头, 就算装饰过的函数其实返回一对值:
+
+\begin{snip}{cpp}
+pair<bool, string> isEven(int n) {
+    return make_pair(n % 2 == 0, "isEven ");
+}
+\end{snip}
+用范畴的定理, 我们可以组合这个态射和另一个从 \code{bool} 出发的态射. 就比如之前那个 \code{negate} 函数:
+
+\begin{snip}{cpp}
+pair<bool, string> negate(bool b) {
+    return make_pair(!b, "Not so! ");
+}
+\end{snip}
+显然, 不能把这两个态射像普通函数那样组合, 因为输入和输出不匹配. 它们的组合应该像这样:
+
+\begin{snip}{cpp}
+pair<bool, string> isOdd(int n) {
+    pair<bool, string> p1 = isEven(n);
+    pair<bool, string> p2 = negate(p1.first);
+    return make_pair(p2.first, p1.second + p2.second);
+}
+\end{snip}
+在我们这个新范畴中, 组合态射的配方:
+
+\begin{enumerate}
+  \tightlist
+  \item
+        执行第一个态射对应的函数, 得到一个值和一个字符串.
+  \item
+        提取结果的第一个分量, 传给第二个态射对应的函数.
+  \item
+        把两个结果的第二个分量连接起来, 作为组合态射的第二个分量.
+  \item
+        返回最终结果对的第一个分量, 还有刚刚拼接的字符串.
+\end{enumerate}
+
+如果要用 C++ 高阶函数抽象这个组合流程, 就要用三种类型的模板, 对应范畴中的三个物件. 这个模板接受两个装饰过的函数,
+这两个函数应该符合规矩而能组合. 它返回一个新的装饰过的函数:
+
+\begin{snip}{cpp}
+template<class A, class B, class C>
+function<Writer<C>(A)> compose(function<Writer<B>(A)> m1,
+                               function<Writer<C>(B)> m2)
+{
+    return [m1, m2](A x) {
+        auto p1 = m1(x);
+        auto p2 = m2(p1.first);
+        return make_pair(p2.first, p1.second + p2.second);
+    };
+}
+\end{snip}
+现在可以回到之前的例子, 用新的模板来组合 \code{toUpper} 和 \code{toWords}:
+
+\begin{snip}{cpp}
+Writer<vector<string>> process(string s) {
+    return compose<string, string, vector<string>>(toUpper, toWords)(s);
+}
+\end{snip}
+还是有点麻烦, 要把类型传给 \code{compose} 模板. 如果编译器支持 C++14 中的泛型 lambda 类型推导, 就可以
+避免它们(感谢 Eric Niebler 提供的代码):
+
+\begin{snip}{cpp}
+auto const compose = [](auto m1, auto m2) {
+    return [m1, m2](auto x) {
+        auto p1 = m1(x);
+        auto p2 = m2(p1.first);
+        return make_pair(p2.first, p1.second + p2.second);
+    };
+};
+\end{snip}
+新定义中, \code{process} 的实现简化为:
+
+\begin{snip}{cpp}
+Writer<vector<string>> process(string s) {
+    return compose(toUpper, toWords)(s);
+}
+\end{snip}
+还没完. 有了组合, 但新范畴里的单位态射呢? 它可不是普通单位函数! 它们要是从类型 $A$ 到类型 $A$ 的态射,
+得被装饰成这样才行:
+
+\begin{snip}{cpp}
+Writer<A> identity(A);
+\end{snip}
+他们组合起来要有单位元的效果. 看看组合的定义, 单位态射不能改变其参数, 也只能加空日志进去:
+
+\begin{snip}{cpp}
+template<class A> Writer<A> identity(A x) {
+    return make_pair(x, "");
+}
+\end{snip}
+这样, 我们就有了一个合法的范畴. 你可以自己验证一下. 特别是, 我们刚刚定义的组合满足结合律. 如果你跟踪第一分量,
+那只是一个普通的函数组合, 它满足结合律. 第二分量是字符串, 字符串拼接也满足结合律.
+
+敏锐的读者也许留意, 我们可以把这个构造泛化到任何幺半群, 而不仅仅是字符串幺半群. 在 \code{compose} 中用
+\code{mappend} 替换 \code{+}, 用 \code{mempty} 替换 \code{""}. 那就没必要只用字符串记录日志了.
+库的写者应该设计得约束最松, 只要能工作就行 --- 这里日志库的唯一要求是日志有幺半群的性质.
+
+\section{Haskell 中的写者}
+
+Haskell 中同样的东西更紧凑, 而且编译器也能提供更多帮助. 从定义 \code{Writer} 类型开始:
+
+\src{snippet01}
+这就是个类型别名, 类似 C++ 的 \code{typedef} (或 \code{using}). 类型 \code{Writer} 以类型变量 \code{a}
+为参数, 等价于 \code{a} 和 \code{String} 的对. 对的词法很简单: 用括号把两个元素括起来, 用逗号分隔.
+
+我们的态射是从任意类型到某个 \code{Writer} 类型的函数:
+
+\src{snippet02}
+把组合声明成一个有趣的中缀运算符, 有时候叫``fish'':
+
+\src{snippet03}
+这函数有两个参数, 每个都是函数, 返回一个函数. 第一个参数类型是 \code{(a -> Writer b)}, 第二个是
+\code{(b -> Writer c)}, 结果是 \code{(a -> Writer c)}.
+
+以下是这个中缀运算符的定义 --- 两个参数 \code{m1} 和 \code{m2} 分别在鱼尾和鱼头:
+
+\src{snippet04}
+结果是一个参数 \code{x} 的 lambda 函数. 这个 lambda 用反斜杠表示 --- 想象一下希腊字母 $\lambda$ 去掉一条腿.
+
+\code{let} 表达式让你声明辅助变量. 这里, \code{m1} 的调用结果模式匹配到一对变量 \code{(y, s1)},
+\code{m2} 用刚刚的 \code{y} 做参数, 结果模式匹配到 \code{(z, s2)}.
+
+Haskell 通常模式匹配这些对, 不用 C++ 那种访问方法. 除此之外, 两种实现很相似.
+
+\code{let} 表达式的整体值在 \code{in} 子句中指定: 这里是一个对, 第一个分量是 \code{z}, 第二个分量是两个字符串
+的连接, \code{s1++s2}.
+
+我还定义了单位态射, 但是为了以后会说的某些原因, 我叫它 \code{return}.
+
+\src{snippet05}
+为完备考虑, 看看 \code{toUpper} 和 \code{toWords} 的 Haskell 版本:
+
+\src{snippet06}
+函数 \code{map} 对应 C++ 的 \code{transform}. 它把字符函数 \code{toUpper} 应用到字符串 \code{s}.
+辅助函数 \code{words} 在标准 Prelude 库中已有.
+
+最后, 两个函数的组合用鱼运算符完成:
+
+\src{snippet07}
+
+\section{Kleisli 范畴}
+
+你也许猜到这个范畴不是我这会才发明的. 它是所谓的 Kleisli 范畴的例子 --- 一个基于单子的范畴.
+我们还没准备好讨论单子, 但你可以浅尝辄止. Kleisli 范畴中, 物件就是底层编程语言的类型. 态射
+从类型 $A$ 出发, 到 $B$ 装饰出的一个衍生类型. 每个 Kleisli 范畴都定义自己组合态射的独特方式,
+还有单位态射. (后面我们会看到, 不精确的术语``装饰''对应范畴中的内函子(endofunctor)的概念.)
+
+这一章中我用的单子叫做\newterm{写者单子}, 用来记录或追踪函数的执行. 这也是一个例子, 说明如何把其他效果
+嵌入纯函数. 你之前看到, 我们可以把编程语言的类型和函数建模成集合上的范畴(忽略 bottom). 这里我们把这个模型
+扩展成一个稍微不同的范畴. 这个范畴的态射用装饰过的函数表示, 它们的组合不仅仅是把一个函数的输出传给另一个.
+我们有了更多的自由度: 改变组合办法的自由. 利用这种自由度, 可以把指称语义放到命令式语言中要用副作用实现的程序里.
+
+\section{挑战}
+
+在一些参数下没有定义值的函数, 叫做偏函数. 数学上说这不是函数, 所以标准范畴论世界里没它的位置. 但是, 可以用
+一个返回装饰类型 \code{optional} 的函数来表示它.
+
+\begin{snip}{cpp}
+template<class A> class optional {
+    bool _isValid;
+    A _value;
+public:
+    optional()    : _isValid(false) {}
+    optional(A v) : _isValid(true), _value(v) {}
+    bool isValid() const { return _isValid; }
+    A value() const { return _value; }
+};
+\end{snip}
+例如, 下面用它实现了装饰函数 \code{safe\_root}:
+
+\begin{snip}{cpp}
+optional<double> safe_root(double x) {
+    if (x >= 0) return optional<double>{sqrt(x)};
+    else return optional<double>{};
+}
+\end{snip}
+下面是挑战:
+
+\begin{enumerate}
+  \tightlist
+  \item
+        构造偏函数的 Kleisli 范畴. (定义组合和单位)
+  \item
+        实现装饰函数 \code{safe\_reciprocal}. 它返回参数合法的倒数, 否则返回空.
+  \item
+        组合函数 \code{safe\_root} 和 \code{safe\_reciprocal} 来实现 \code{safe\_root\_reciprocal}.
+        这个函数计算 \code{sqrt(1/x)} (若可以计算).
+\end{enumerate}
