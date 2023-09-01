@@ -1,15 +1,15 @@
 % !TEX root = ../../ctfp-print.tex
 
-\lettrine[lhang=0.17]{学}{过两种} 组合类型的方法: 积和余积. 日常编程中我们可以用这两种
+\lettrine[lhang=0.17]{学}{过两种}组合类型的方法: 积和余积. 日常编程中我们可以用这两种
 方法建造出大量的数据结构. 这有重要的实践意义. 许多数据结构的性质是可组合的. 例如, 如果你知道
-如何判等基本数据类型, 你就知道如何把比较推广到积类型和余积类型里来. 在 Haskell 你可以
+如何判等基本数据类型, 你就可以把比较推广到积类型和余积类型里来. 在 Haskell 你可以
 为大量组合类型自动衍生判等, 比较, 字符串转换等更多功能.
 
 我们仔细看看编程中的积类型与和类型.
 
 \section{积类型}
 
-编程语言里, 两类型积的经典实现就是对. 在 Haskell 里, 对是一个原类型构造子; 在 C++ 里, 它是
+编程语言里, 两类型积的经典实现就是对. 在 Haskell 里, 对是一个原始类型构造子; 在 C++ 里, 它是
 标准库里一个相当复杂的模板.
 
 \begin{figure}[H]
@@ -25,7 +25,7 @@
 你可以认为这两个对不过用不同的格式存储同样的信息. 就像大端序和小端序一样.
 
 可以把任意数量的类型组合成积类型, 只要把对嵌套在对里. 但是有更简单的方法: 嵌套对是等价于元组的.
-因为其实不同的对嵌套方式是同构的. 如果你想把三个类型 \code{a}, \code{b}, 和 \code{c} 按刚才的顺序
+因为其实不同的嵌套方式是同构的. 如果你想把三个类型 \code{a}, \code{b}, 和 \code{c} 按刚才的顺序
 组合成积, 可以有两种做法:
 
 \src{snippet02}
@@ -39,11 +39,11 @@
 这个函数是可逆的:
 
 \src{snippet05}
-所以这是一个同构. 只是有不同重新打包信息的方法.
+所以这是一个同构. 同样的信息, 只是打包方式不同.
 
 你可以把创建积类型的过程看作是类型的二元运算. 从这个角度看, 上面的同构就像幺半群的结合律:
 \[(a * b) * c = a * (b * c)\]
-除了在幺半群的情况下, 两种组合积的方式是相等的; 而在这里只是 ``同构意义上'' 相等的.
+除了在幺半群的情况下, 两种组合积的方式就是相等的; 而在这里只是 ``同构意义上'' 相等的.
 
 如果我们只看同构, 不去管严格相等, 我们可以更进一步, 说明单元类型 \code{()} 是积类型的单位元,
 就像 1 是乘法的单位元. 确实, 一个值和单元类型配对不会增加任何信息. 这类型:
@@ -55,7 +55,7 @@
 
 \src{snippet08}
 这些观察可以形式化为说 $\Set$ (集合范畴) 是一个\newterm{monidal category 幺半范畴}. 它是一个范畴,
-也是一个幺半群, 你可以把对象相乘 (这里是取笛卡尔积). 我会在后面讲更多关于幺半范畴的内容, 并给出完整定义.
+也是一个幺半群, 因为你可以把对象相乘 (这里是取笛卡尔积). 我会在后面讲更多关于幺半范畴的内容, 并给出完整定义.
 
 Haskell 中定义积类型还有一种更一般的方法 --- 特别是当它们和和类型结合时. 它用多参数的具名构造子. 例如对
 也可以这样定义:
@@ -120,75 +120,54 @@ Haskell 中定义积类型还有一种更一般的方法 --- 特别是当它们�
 正如集合范畴里的积产生了积类型, 余积运算给出了和类型. Haskell 中和类型的经典实现是:
 
 \src{snippet21}
-就像对, \code{Either}们是可交换的(同构意义上), 可以嵌套, 嵌套顺序无关(同构意义上).
+就像对, \code{Either} 也是可交换的(同构意义上), 可以嵌套, 嵌套顺序无关(同构意义上).
 所以我们可以定义三元的和类型:
 
 \src{snippet22}
 以此类推.
 
-It turns out that $\Set$ is also a (symmetric) monoidal category
-with respect to coproduct. The role of the binary operation is played by
-the disjoint sum, and the role of the unit element is played by the
-initial object. In terms of types, we have \code{Either} as the
-monoidal operator and \code{Void}, the uninhabited type, as its
-neutral element. You can think of \code{Either} as plus, and
-\code{Void} as zero. Indeed, adding \code{Void} to a sum type
-doesn't change its content. For instance:
+在余积运算下, $Set$ 也是一个(对称的)幺半群. 二元运算是不交并, 单位元是初始物件. 用类型来说, \code{Either} 是
+幺半群的运算符, \code{Void} 是单位元. 你可以把 \code{Either} 看作加法, \code{Void} 看作零. 确实, 把 \code{Void}
+加到任何和类型中都不会改变它的值. 例如:
 
 \src{snippet23}
-is isomorphic to \code{a}. That's because there is no way to construct
-a \code{Right} version of this type --- there isn't a value of type
-\code{Void}. The only inhabitants of \code{Either a Void} are
-constructed using the \code{Left} constructors and they simply
-encapsulate a value of type \code{a}. So, symbolically, $a + 0 = a$.
+和 \code{a} 同构. 因为不能构造出这个类型的 \code{Right} 部分,  --- 没有 \code{Void} 类型的值. 所以类型
+\code{Either a Void} 只能用 \code{Left} 构造出来, 它只是 \code{a} 的包装. 所以符号化为 $a + 0 = a$.
 
-Sum types are pretty common in Haskell, but their C++ equivalents,
-unions or variants, are much less common. There are several reasons for
-that.
+和类型在 Haskell 中很常见, 但它们在 C++ 中没那么常用. 有很多原因.
 
-First of all, the simplest sum types are just enumerations and are
-implemented using \code{enum} in C++. The equivalent of the Haskell
-sum type:
+首先, 最简单的和类型就是枚举, 在 C++ 里用 \code{enum} 实现. Haskll 中的这个和类型:
 
 \src{snippet24}
-is the C++:
+是 C++ 中的:
 
 \begin{snip}{cpp}
 enum { Red, Green, Blue };
 \end{snip}
-An even simpler sum type:
+一个更简单的和类型:
 
 \src{snippet25}
-is the primitive \code{bool} in C++.
+是 C++ 中原始类型 \code{bool}.
 
-Simple sum types that encode the presence or absence of a value are
-variously implemented in C++ using special tricks and ``impossible''
-values, like empty strings, negative numbers, null pointers, etc. This
-kind of optionality, if deliberate, is expressed in Haskell using the
-\code{Maybe} type:
+有时需要用和类型来表达"缺少值". 这个简单的和类型在 C++ 中一般用特殊的技巧或者所谓的 ``不可能值'' 实现, 例如
+空字符串, 负数, 空指针等等. 如果真要表达这种可选性, 在 Haskell 中用 \code{Maybe} 类型:
 
 \src{snippet26}
-The \code{Maybe} type is a sum of two types. You can see this if you
-separate the two constructors into individual types. The first one would
-look like this:
+\code{Maybe} 类型就是两个类型的和. 你可以把两个构造子分开, 这样就能看得更清楚了. 第一个是这样:
 
 \src{snippet27}
-It's an enumeration with one value called \code{Nothing}. In other
-words, it's a singleton, which is equivalent to the unit type
-\code{()}. The second part:
+这是只有一个值的枚举, 叫做 \code{Nothing}. 换句话说, 这是个单例, 也就等价于单位类型 \code{()}.
+第二个部分:
 
 \src{snippet28}
-is just an encapsulation of the type \code{a}. We could have encoded
-\code{Maybe} as:
+就是一个 \code{a} 类型的封装. 我们可以这样编码 \code{Maybe}:
 
 \src{snippet29}
-More complex sum types are often faked in C++ using pointers. A pointer
-can be either null, or point to a value of specific type. For instance,
-a Haskell list type, which can be defined as a (recursive) sum type:
+更复杂的和类型在 C++ 中通常用指针来伪装. 指针可以是空的, 或者指向某个值. 例如, Haskell 中的列表类型可以定义成
+一个递归的和类型:
 
 \src{snippet30}
-can be translated to C++ using the null pointer trick to implement the
-empty list:
+翻译成 C++ 的时候可以用空指针来实现空列表:
 
 \begin{snip}{cpp}
 template<class A>
@@ -201,129 +180,77 @@ public:
     {}
 };
 \end{snip}
-Notice that the two Haskell constructors \code{Nil} and \code{Cons}
-are translated into two overloaded \code{List} constructors with
-analogous arguments (none, for \code{Nil}; and a value and a list for
-\code{Cons}). The \code{List} class doesn't need a tag to
-distinguish between the two components of the sum type. Instead it uses
-the special \code{nullptr} value for \code{\_head} to encode
+注意 Haskell 的两个构造子 \code{Nil} 和 \code{Cons} 在 C++ 中变成了两个重载的 \code{List} 构造函数.
+\code{List} 类不需要标签来区分和类型的两个部分. 它让 \code{\_head} 是特殊的 \code{nullptr} 的值来代表
 \code{Nil}.
 
-The main difference, though, between Haskell and C++ types is that
-Haskell data structures are immutable. If you create an object using one
-particular constructor, the object will forever remember which
-constructor was used and what arguments were passed to it. So a
-\code{Maybe} object that was created as \code{Just "energy"} will
-never turn into \code{Nothing}. Similarly, an empty list will forever
-be empty, and a list of three elements will always have the same three
-elements.
+不过 C++ 和 Haskell 类型最重要的差别还是 Haskell 中的类型不可变. 如果你用一个构造子创建了一个对象, 这对象会
+永远记住构造它时候的构造子和参数. 所以用 \code{Just "energy"} 创建的 \code{Maybe} 对象永远不会变成 \code{Nothing}.
+类似, 空列表永远是空的, 三个元素的列表永远都是这三个元素的列表.
 
-It's this immutability that makes construction reversible. Given an
-object, you can always disassemble it down to parts that were used in
-its construction. This deconstruction is done with pattern matching and
-it reuses constructors as patterns. Constructor arguments, if any, are
-replaced with variables (or other patterns).
+这种不变性让构造是可逆的. 给一个对象, 总可以把它分拆成构造它用的部分. 这个分拆用模式匹配实现, 它重用构造子作为模式.
+如果构造子有参数的话, 就用变量(或者其它模式)来代替.
 
-The \code{List} data type has two constructors, so the deconstruction
-of an arbitrary \code{List} uses two patterns corresponding to those
-constructors. One matches the empty \code{Nil} list, and the other a
-\code{Cons}-constructed list. For instance, here's the definition of a
-simple function on \code{List}s:
+\code{List} 数据类型有两个构造子, 所以解构 \code{List} 用两个模式来匹配. 一个匹配空列表 \code{Nil}, 另一个匹配
+\code{Cons} 构造的列表. 例如, 这个简单的 \code{List} 函数:
 
 \src{snippet31}
-The first part of the definition of \code{maybeTail} uses the
-\code{Nil} constructor as pattern and returns \code{Nothing}. The
-second part uses the \code{Cons} constructor as pattern. It replaces
-the first constructor argument with a wildcard, because we are not
-interested in it. The second argument to \code{Cons} is bound to the
-variable \code{t} (I will call these things variables even though,
-strictly speaking, they never vary: once bound to an expression, a
-variable never changes). The return value is \code{Just t}. Now,
-depending on how your \code{List} was created, it will match one of
-the clauses. If it was created using \code{Cons}, the two arguments
-that were passed to it will be retrieved (and the first discarded).
+\code{maybeTail} 定义的第一部分用 \code{Nil} 构造子作为模式, 返回 \code{Nothing}. 第二部分用 \code{Cons} 构造子作为模式.
+它把第一个构造子参数换成通配符, 因为我们不关心它. 第二个参数绑定到变量 \code{t} (我会把这些东西叫做变量, 尽管严格来说,
+它们从不变化: 一旦绑定到一个表达式, 变量就不会再变了). 返回值是 \code{Just t}. 现在, 根据你的 \code{List} 是怎么创建的,
+它会匹配其中一个模式. 如果它是用 \code{Cons} 创建的, 传给它的两个参数就会被取出来(第一个被丢弃).
 
-Even more elaborate sum types are implemented in C++ using polymorphic
-class hierarchies. A family of classes with a common ancestor may be
-understood as one variant type, in which the vtable serves as a hidden
-tag. What in Haskell would be done by pattern matching on the
-constructor, and by calling specialized code, in C++ is accomplished by
-dispatching a call to a virtual function based on the vtable pointer.
+用多态的类层级, 可以在 C++ 中实现更复杂的和类型. 一族共祖的类可以看作是一个和类型, 其中虚函数表充当隐藏的标签.
+Haskell 中用模式匹配做的事情, C++ 中用虚函数指针分派相应虚函数来做.
 
-You will rarely see \code{union} used as a sum type in C++ because of
-severe limitations on what can go into a union. You can't even put a
-\code{std::string} into a union because it has a copy constructor.
+你很少会在 C++ 中看到用 \code{union} 做和类型. 因为 \code{union} 有严格的限制, 你甚至不能把 \code{std::string}
+放进联合里, 因为它有个拷贝构造函数.
 
-\section{Algebra of Types}
+\section{类型的代数}
 
-Taken separately, product and sum types can be used to define a variety
-of useful data structures, but the real strength comes from combining
-the two. Once again we are invoking the power of composition.
+积类型与和类型中任选一个就能定义出大量有用的数据结构, 但更强大的是它们二者一起用. 再一次, 我们在使用组合的力量.
 
-Let's summarize what we've discovered so far. We've seen two commutative
-monoidal structures underlying the type system: We have the sum types
-with \code{Void} as the neutral element, and the product types with
-the unit type, \code{()}, as the neutral element. We'd like to think
-of them as analogous to addition and multiplication. In this analogy,
-\code{Void} would correspond to zero, and unit, \code{()}, to one.
+总结一下我们说过的东西. 我们看到类型系统下有两个可交换的幺半群: 一个是和类型, 单位元是 \code{Void}; 另一个是积类型,
+单位元是单元类型 \code{()}. 我们想把它们看作加法和乘法. 在这个类比下, \code{Void} 对应于零, 单元类型 \code{()}
+对应于一.
 
-Let's see how far we can stretch this analogy. For instance, does
-multiplication by zero give zero? In other words, is a product type with
-one component being \code{Void} isomorphic to \code{Void}? For
-example, is it possible to create a pair of, say \code{Int} and
-\code{Void}?
+看看怎么继续这个比喻. 例如, 乘以零会得到零吗? 换句话说, 如果一个积类型有个分量是 \code{Void}, 它是不是同构于 \code{Void}?
+例如, 能不能构造一个对, 其类型为 \code{Void} 和 \code{Int}?
 
-To create a pair you need two values. Although you can easily come up
-with an integer, there is no value of type \code{Void}. Therefore, for
-any type \code{a}, the type \code{(a, Void)} is uninhabited --- has
-no values --- and is therefore equivalent to \code{Void}. In other
-words, $a \times 0 = 0$.
+要有两个值才能构造出一个对. 虽然你可以随便拿出一个整数, 但没有 \code{Void} 类型的值. 所以对于任何类型 \code{a},
+类型 \code{(a, Void)} 是不可构造的 --- 没有值. 所以它和 \code{Void} 等价. 换句话说, $a \times 0 = 0$.
 
-Another thing that links addition and multiplication is the distributive
-property:
-\[a \times (b + c) = a \times b + a \times c\]
-Does it also hold for product and sum types? Yes, it does --- up to
-isomorphisms, as usual. The left hand side corresponds to the type:
+另外, 乘法和加法有分配律: \[a \times (b + c) = a \times b + a \times c\]
+积类型与和类型也有这个性质吗? 是的, --- 同构意义上. 左边对应的类型是:
 
 \src{snippet32}
-and the right hand side corresponds to the type:
+右边对应的类型是:
 
 \src{snippet33}
-Here's the function that converts them one way:
+这是转换它们的函数:
 
 \src{snippet34}
-and here's one that goes the other way:
+转换的另一边:
 
 \src{snippet35}
-The \code{case of} statement is used for pattern matching inside
-functions. Each pattern is followed by an arrow and the expression to be
-evaluated when the pattern matches. For instance, if you call
-\code{prodToSum} with the value:
+\code{case of} 语句用来在函数里模式匹配. 每个模式后面跟一个箭头和一个表达式, 当模式匹配时, 表达式就会被求值.
+例如, 如果你这样调用 \code{prodToSum}:
 
 \src{snippet36}
-the \code{e} in \code{case e of} will be equal to
-\code{Left "Hi!"}. It will match the pattern \code{Left y},
-substituting \code{"Hi!"} for \code{y}. Since the \code{x} has
-already been matched to \code{2}, the result of the \code{case of}
-clause, and the whole function, will be \code{Left (2, "Hi!")}, as
-expected.
+\code{case e of} 中的 \code{e} 会等于 \code{Left "Hi!"}. 它会匹配模式 \code{Left y}, 把 \code{"Hi!"} 替换到 \code{y}.
+因为 \code{x} 已经匹配到了 \code{2}, \code{case of} 语句的结果, 也就是整个函数的结果, 会是 \code{Left (2, "Hi!")},
+正如所料.
 
-I'm not going to prove that these two functions are the inverse of each
-other, but if you think about it, they must be! They are just trivially
-re-packing the contents of the two data structures. It's the same data,
-only different format.
+我不打算证明这两个函数互逆, 你想想就知道是一定的. 它们只是简单重组两个数据结构的内容. 相同的数据, 不同的格式.
 
-Mathematicians have a name for two such intertwined monoids: it's called
-a \newterm{semiring}. It's not a full \newterm{ring}, because we can't define
-subtraction of types. That's why a semiring is sometimes called a
-\newterm{rig}, which is a pun on ``ring without an \emph{n}'' (negative).
-But barring that, we can get a lot of mileage from translating
-statements about, say, natural numbers, which form a rig, to statements
-about types. Here's a translation table with some entries of interest:
+数学家给这种两个缠绕起来的幺半群结构取了一个名字: \newterm{semiring 半环}. 它不是一个完整的\newterm{ring 环}, 因为
+我们不能定义类型的减法. 这就是为什么半环有时候叫做\newterm{rig}, 这是 ``ring 没有 \emph{n}(negative)'' 的谐音.
+不过无论如何, 我们可以把其他半环(比如自然数)上的东西翻译到类型里来, 这样得到不少启发. 下面是一个翻译表, 其中有一些
+有意义的条目:
 
 \begin{longtable}[]{@{}ll@{}}
   \toprule
-  Numbers      & Types\tabularnewline
+  数字 & 类型\tabularnewline
   \midrule
   \endhead
   $0$          & \code{Void}\tabularnewline
@@ -336,22 +263,16 @@ about types. Here's a translation table with some entries of interest:
 \end{longtable}
 
 \noindent
-The list type is quite interesting, because it's defined as a solution
-to an equation. The type we are defining appears on both sides of the
-equation:
+列表类型很有趣, 因为它定义成一个方程的解. 我们要定义的类型出现在等式的两边:
 
 \src{snippet37}
-If we do our usual substitutions, and also replace \code{List a} with
-\code{x}, we get the equation:
+如果做往常的替换, 而且还把 \code{List a} 替换成 \code{x}, 我们得到方程:
 
 \begin{Verbatim}
   x = 1 + a * x
 \end{Verbatim}
-We can't solve it using traditional algebraic methods because we can't
-subtract or divide types. But we can try a series of substitutions,
-where we keep replacing \code{x} on the right hand side with
-\code{(1 + a*x)}, and use the distributive property. This leads to
-the following series:
+不能用传统代数方法解这个方程, 因为我们没法在类型上做除法和减法. 但是可以试试替换, 在右边用 \code{(1 + a * x)} 替换
+\code{x}, 然后用分配律. 这样就得到了一个级数:
 
 \begin{Verbatim}
   x = 1 + a*x
@@ -360,31 +281,21 @@ the following series:
   ...
   x = 1 + a + a*a + a*a*a + a*a*a*a...
 \end{Verbatim}
-We end up with an infinite sum of products (tuples), which can be
-interpreted as: A list is either empty, \code{1}; or a singleton,
-\code{a}; or a pair, \code{a*a}; or a triple, \code{a*a*a};
-etc\ldots{} Well, that's exactly what a list is --- a string of
-\code{a}s!
+最后有了一个无穷的积(元组)之和, 这可以解释成: 列表可以是空的, \code{1}; 或者单例, \code{a}; 或者对, \code{a*a};
+或者三元组, \code{a*a*a}; 等等\ldots{} 这正是列表的定义 --- 一串 \code{a}!
 
-There's much more to lists than that, and we'll come back to them and
-other recursive data structures after we learn about functors and fixed
-points.
+关于列表还有很多. 学过函子和不动点之后, 我们会回来, 然后讨论更多递归数据结构.
 
-Solving equations with symbolic variables --- that's algebra! It's what
-gives these types their name: algebraic data types.
+用符号变量解方程 --- 这是代数! 所以这些类型有了这个名字: 代数数据类型.
 
-Finally, I should mention one very important interpretation of the
-algebra of types. Notice that a product of two types \code{a} and
-\code{b} must contain both a value of type \code{a} \emph{and} a
-value of type \code{b}, which means both types must be inhabited. A
-sum of two types, on the other hand, contains either a value of type
-\code{a} \emph{or} a value of type \code{b}, so it's enough if one
-of them is inhabited. Logical \emph{and} and \emph{or} also form a
-semiring, and it too can be mapped into type theory:
+最后, 我要提到一个类型代数非常重要的一个解读. 注意两个类型 \code{a} 和 \code{b} 的积类型 \code{(a, b)} 必须
+包含类型 \code{a} \emph{和} 类型 \code{b} 的值, 所以两个类型都必须是可构造的. 另一方面, 两个类型的和类型
+\code{Either a b} 只需要包含类型 \code{a} \emph{或者} 类型 \code{b} 的值, 所以只要其中一个是可构造的就行.
+逻辑的 \emph{和} 与 \emph{或} 也是一个半环, 它也可以映射到类型理论中:
 
 \begin{longtable}[]{@{}ll@{}}
   \toprule
-  Logic                & Types\tabularnewline
+  逻辑                & 类型\tabularnewline
   \midrule
   \endhead
   $\mathit{false}$     & \code{Void}\tabularnewline
@@ -395,54 +306,44 @@ semiring, and it too can be mapped into type theory:
 \end{longtable}
 
 \noindent
-This analogy goes deeper, and is the basis of the Curry-Howard
-isomorphism between logic and type theory. We'll come back to it when we
-talk about function types.
+这个比喻有更深的意味, 这是逻辑与类型理论中 Curry-Howard 同构的基础. 讨论函数类型的时候, 我们会回到这个问题上来.
 
-\section{Challenges}
+\section{挑战}
 
 \begin{enumerate}
   \tightlist
   \item
-        Show the isomorphism between \code{Maybe a} and
-        \code{Either () a}.
+        说明 \code{Maybe a} 和 \code{Either () a} 是同构的.
   \item
-        Here's a sum type defined in Haskell:
+        下面是 Haskell 里的一个和类型:
 
         \begin{snip}{haskell}
 data Shape = Circle Float
            | Rect Float Float
 \end{snip}
-        When we want to define a function like \code{area} that acts on a
-        \code{Shape}, we do it by pattern matching on the two constructors:
+        想在 \code{Shape} 上定义类似 \code{area} 的函数, 需要模式匹配两个构造子:
 
         \begin{snip}{haskell}
 area :: Shape -> Float
 area (Circle r) = pi * r * r
 area (Rect d h) = d * h
 \end{snip}
-        Implement \code{Shape} in C++ or Java as an interface and create two
-        classes: \code{Circle} and \code{Rect}. Implement \code{area} as
-        a virtual function.
+        在 C++ 或 Jave 里把 \code{Shape} 实现为一个接口, 新建两个类: \code{Circle} 和 \code{Rect}.
+        把 \code{area} 实现为一个虚函数.
   \item
-        Continuing with the previous example: We can easily add a new function
-        \code{circ} that calculates the circumference of a \code{Shape}.
-        We can do it without touching the definition of \code{Shape}:
+        继续前面的例子: 可以轻易增加一个新的函数 \code{circ} 计算 \code{Shape} 的周长.
+        这样做不需要动 \code{Shape} 的定义:
 
         \begin{snip}{haskell}
 circ :: Shape -> Float
 circ (Circle r) = 2.0 * pi * r
 circ (Rect d h) = 2.0 * (d + h)
 \end{snip}
-        Add \code{circ} to your C++ or Java implementation. What parts of
-        the original code did you have to touch?
+        在你 C++ 或者 Java 的实现里, 你需要修改哪些代码来加入它?
   \item
-        Continuing further: Add a new shape, \code{Square}, to
-        \code{Shape} and make all the necessary updates. What code did you
-        have to touch in Haskell vs. C++ or Java? (Even if you're not a
-        Haskell programmer, the modifications should be pretty obvious.)
+        继续: 加入新的形状 \code{Square} 到 \code{Shape} 里, 并做所有必要的更新.
+        你在 Haskell 里需要修改哪些代码, 在 C++ 或者 Java 里呢? (即使你不是 Haskell 程序员,
+        修改应该也很明显.)
   \item
-        Show that $a + a = 2 \times a$ holds for types (up to
-        isomorphism). Remember that $2$ corresponds to \code{Bool},
-        according to our translation table.
+        说明 $a + a = 2 \times a$ 对于类型(同构意义上)成立. 回想在我们的翻译表里 $2$ 对应 \code{Bool}.
 \end{enumerate}
