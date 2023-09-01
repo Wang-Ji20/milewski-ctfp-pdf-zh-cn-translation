@@ -1,13 +1,10 @@
-![GitHub stars][github stars]
-[![GitHub Workflow Status][github workflow status]][github actions link]
-[![Download][download badge]][github latest release]
-[![License][license badge]][github latest release]
-
-# Category Theory For Programmers
+# 写给程序员的范畴论
 
 An _unofficial_ PDF version of "**C**ategory **T**heory **F**or **P**rogrammers"
 by [Bartosz Milewski][bartosz github], converted from his [blogpost
 series][blogpost series] (_with permission!_).
+
+__非官方中文翻译__ 施工中
 
 ![Category Theory for Programmers][ctfp image]
 
@@ -36,6 +33,8 @@ all the available versions of this book. Then type `nix build .#<edition>` to
 build the edition you want (Haskell, Scala, OCaml, Reason and their printed
 versions). For example, to build the Scala edition you'll have to type
 `nix build .#ctfp-scala`.
+
+中文翻译: `nix build .#zh-cn`
 
 Upon successful compilation, the PDF file will be placed in the `result`
 directory.
