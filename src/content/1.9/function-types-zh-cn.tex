@@ -1,0 +1,394 @@
+% !TEX root = ../../ctfp-print.tex
+
+\lettrine[lhang=0.17]{现}{在}为止我都在函数类型上打马虎眼. 函数类型同其它的类型不一样.
+
+就拿 \code{Integer} 来说: 它只是一些整数的集合. \code{Bool} 只是一个二元素集合. 但是函数类型 $a\to b$ 比这更多
+: 它是物件 $a$ 与 $b$ 之间态射的集合. 在范畴中, 两个物件的态射集合叫做 hom-集. 很巧, 在范畴 $Set$ 中, 每个
+hom-集本身也是同一个范畴中的物件 --- 因为毕竟它是一个 \emph{集合}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.35\textwidth]{images/set-hom-set.jpg}
+  \caption{Hom-set in Set is just a set}
+\end{figure}
+
+\noindent
+这在其他范畴不一定对. 如果 hom-集不是范畴中的物件, 那么它们就叫做 \emph{外部} hom-集.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.35\textwidth]{images/hom-set.jpg}
+  \caption{Hom-set in category C is an external set}
+\end{figure}
+
+\noindent
+$Set$ 范畴具有自指性, 让里面的函数类型非常特殊. 不过在有些范畴里, 依然有办法构造一些物件, 让它们代表 hom-集.
+这些物件叫做 \newterm{internal 内} hom-sets.
+
+\section{普遍构造}
+
+忘掉函数类型是集合吧. 让我们从头构造一个函数类型, 或者说构造一个内 hom-集合. 和往常一样, 我们会从 $\Set$
+集合中借用一些想法, 但会小心避免使用集合的性质, 这样构造就能自动适用于其它范畴.
+
+函数类型可以看成复合类型, 因为它同参数类型和结果类型都有关系. 我们已经看过复合类型的构造 --- 那些涉及到物件之间的关系.
+我们用普遍构造定义了 \hyperref[products-and-coproducts]{product 和 coproduct 类型}. 我们可以用同样的手法定义
+函数类型. 我们需要一个包含三个物件的模式: 我们要构造的函数类型, 参数类型, 结果类型.
+
+显然, 用下面这个模式就能把它们联系起来: \newterm{function application 函数应用} 或者说 \newterm{evaluatioin 求值}.
+给定一个函数类型的候选者, 我们叫它 $z$ (注意, 如果不在 $\Set$ 范畴, 这就只是一个物件, 和其它物件没区别), 还有参数类型
+ $a$ (一个物件), 函数应用把这一对映射到结果类型 $b$ (一个物件). 我们有三个物件, 其中两个是固定的 (参数类型和结果类型).
+
+我们还有那个应用, 这是一个映射. 我们怎么把这个映射放进模式里? 如果我们可以看物件的内部, 我们可以把一个函数 $f$ (属于
+$z$) 和一个参数 $x$ (属于 $a$) 配对, 然后把它映射到 $f x$ (属于 $b$).
+
+\begin{figure}[H]
+  \centering\includegraphics[width=0.35\textwidth]{images/functionset.jpg}
+  \caption{In Set we can pick a function $f$ from a set of functions $z$ and we can
+    pick an argument $x$ from the set (type) $a$. We get an element $f x$ in the
+    set (type) $b$.}
+\end{figure}
+
+\noindent
+与其处理单个对 $(f, x)$, 我们不如处理整个函数类型 $z$ 和参数类型 $a$ 的 \emph{乘积}. 积 $z\times{}a$ 是一个物件,
+我们可以挑一个箭头 $g$ 从这个物件指向 $b$, 作为我们的应用态射. 在 $\Set$ 中, $g$ 就是那个把 $(f, x)$ 映射到 $f x$ 的函数.
+
+所以就是这个模式: 两个物件 $z$ 和 $a$ 的积, 用一个态射 $g$ 连接到另一个物件 $b$.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{images/functionpattern.jpg}
+  \caption{A pattern of objects and morphisms that is the starting point of the
+    universal construction}
+\end{figure}
+
+\noindent
+这个模式足够精确, 让我们可以用普遍构造挑出函数类型吗? 不是每个范畴都这样, 但在我们感兴趣的范畴里已经足够了.
+另外的问题: 能不能不先定义积, 就定义函数类型? 有些范畴没有积, 或者不是每对物件都有积. 答案是不能: 如果没有积, 就没有函数类型.
+后面说到指数的时候, 还会回到这个问题.
+
+来复习一下普遍构造. 我们开始于一个描述物件和态射的模式. 这是我们最模糊的查询, 它通常有大量的结果. 特别在 $Set$ 中, 几乎
+所有东西都联系在一起. 我们可以拿任意的物件 $z$ 把它和 $a$ 相乘, 然后有一个从它到 $b$ 的函数 (除非 $b$ 是空集).
+
+所以我们用秘密武器: 排名. 通常来说, 我们要求候选物件之间有唯一的映射 --- 一个某种程度上因子化我们构造的映射. 在我们的例子中,
+我们定义 $z$ 和从 $z\times{}a$ 到 $b$ 的映射 $g$ 比其它的 $z'$ 和 $g'$ \emph{更好}, 当且仅当有一个唯一的从 $z'$ 到 $z$ 的映射
+$h$, 使得 $g'$ 的应用通过 $g$ 的应用因子化. (提示: 边看图边理解这个句子)
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{images/functionranking.jpg}
+  \caption{Establishing a ranking between candidates for the function object}
+\end{figure}
+
+\noindent
+现在是最难的部分, 所以我把这个普遍构造留到现在才说. 给定态射 $h\colon{}z'\to{}z$, 我们打算补全上图的所有箭头.
+可以看到, 还缺少一个从 $z'\times{}a$ 到 $z\times{}a$ 的映射. 讨论过 \hyperref[functoriality]{积的函子性}
+后, 我们知道怎么做. 因为乘积本身是一个函子(更精确说是自双函子), 所以可以抬升一对态射. 换句话说, 我们不仅可以定义
+物件的积, 也可以定义态射的积.
+
+因为我们不动乘积 $z'\times{}a$ 的第二个因数, 所以我们把这对态射抬升为 $(h, \id)$, 这里的 $\id$ 是 $a$ 上的单位态射.
+
+所以这就是我们如何我们如何用另一个应用 $g'$ 因子化应用 $g$.
+\[g' = g \circ (h \times \id)\]
+诀窍是积在态射上的行为.
+
+普遍构造的第三部分是选择普遍来说最好的物件. 称这个物件为 $a \Rightarrow b$ (把这个看成物件的一个名字, 不要和 Haskell 的
+类型类约束混淆 --- 我之后会说命名它的其他方法). 这个物件附带一个自己的应用 --- 这态射从 $(a \Rightarrow b) \times a$ 到 $b$
+ --- 这我们叫做 $eval$. 物件 \code{$a \Rightarrow b$} 最好, 如果任何其他函数物件的候选都可以唯一映射到它, 使得它的应用
+ 态射 $g$ 经由 $eval$ 因子化. 按我们的排名方法, 这个物件比其它的都好.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\textwidth]{images/universalfunctionobject.jpg}
+  \caption{The definition of the universal function object. This is the same
+    diagram as above, but now the object $a \Rightarrow b$ is \emph{universal}.}
+\end{figure}
+
+\noindent
+正式地说:
+
+\begin{longtable}[]{@{}l@{}}
+  \toprule
+  \begin{minipage}[t]{0.97\columnwidth}\raggedright\strut
+    一个从 $a$ 到 $b$ 的 \emph{函数物件} 表示为 $a \Rightarrow b$, 它同时有一个态射
+    \[eval \Colon ((a \Rightarrow b) \times a) \to b\]
+    使得对于其他任意有态射
+    \[g \Colon z \times a \to b\] 的物件 $z$,
+    有唯一的态射
+    \[h \Colon z \to (a \Rightarrow b)\]
+    通过 $eval$ 因子化 $g$:
+    \[g = eval \circ (h \times \id)\]
+  \end{minipage}\tabularnewline
+  \bottomrule
+\end{longtable}
+
+\noindent
+当然, 不能确保在给定的范畴里, 对任何物件对 $a$, $b$, 都有这个物件 $a \Rightarrow b$. 但是 $Set$ 中确实都有.
+而且, 在 $\Set$ 中, 这个物件同构于 hom-集 $\Set(a, b)$.
+
+这就是为什么在 Haskell 里, 我们把函数类型 \code{a -> b} 看成范畴函数物件 $a \Rightarrow b$.
+
+\section{柯里化}
+
+再看一看函数物件的所有候选. 这回我们把态射 $g$ 看作两个变量 $z$ 和 $a$ 的函数.
+\[g \Colon z \times a \to b\]
+成为来自乘积的态射就像成为两个变量的函数. 特别的, 在 $\Set$ 中, $g$ 出发自一对值, 一个来自 $z$, 一个来自 $a$.
+
+另一方面, 普遍性质告诉我们, 对任何这样的 $g$, 都有一个唯一的态射 $h$ 把 $z$ 映射到一个函数物件 $a \Rightarrow b$.
+\[h \Colon z \to (a \Rightarrow b)\]
+在 $\Set$ 中, 这就是说 $h$ 是一个函数, 它接受一个类型为 $z$ 的变量, 返回一个从 $a$ 到 $b$ 的函数. $h$ 是个高阶函数.
+因此普遍构造建立了一组一一映射, 从二元函数到一个返回一元函数的函数. 这种对应关系叫做 \newterm{柯里化}, 而 $h$ 叫做 $g$ 的
+柯里化版本.
+
+这关系是一一对应的, 因为给定任意 $g$ 都有唯一的 $h$, 给定任意 $h$ 都可以重建二元函数 $g$, 只要用这个公式:
+\[g = eval \circ (h \times \id)\]
+函数 $g$ 叫做 $h$ 的 \emph{未柯里化} 版本.
+
+柯里化实际上就在 Haskell 的词法中. 返回函数的函数:
+
+\src{snippet01}
+常常看成二元函数. 这是我们读不带括号签名的读法:
+
+\src{snippet02}
+我们定义多元函数的时候, 这个阐释很显然. 例如:
+
+\src{snippet03}
+这个函数也可以写成一个一元函数, 其返回一个函数 --- 一个 lambda:
+
+\src{snippet04}
+这两个定义是等价的, 任何一个都可以部分应用到一个参数, 产生一个一元函数, 就像这样:
+
+\src{snippet05}
+严格来说, 二元函数接受一个对(一个积类型):
+
+\src{snippet06}
+很容易转换两种表示的方法, 两个高阶函数分别叫做 \code{curry} 和 \code{uncurry}:
+
+\src{snippet07}
+和
+
+\src{snippet08}
+留意 \code{curry} 是函数物件普遍构造的 \emph{因子化者}. 重写成这样更明晰:
+
+\src{snippet09}
+(提醒一下: 因子化器产生一个候选的因子化函数.)
+
+在非函数式语言, 例如 C++ 中, 柯里化是可能的, 但是不容易. 你可以把 C++ 的多参数函数堪称 Haskell 中接受元组的函数(虽然,
+更乱的是, 在 C++ 里你可以定义一些函数接受 \code{std::tuple}, 以及可变参数函数, 还有接受初始化列表的函数).
+
+你可以用模板 \code{std::bind} 部分应用 C++ 函数. 例如, 给定一个两个字符串的函数:
+
+\begin{snip}{cpp}
+std::string catstr(std::string s1, std::string s2) {
+    return s1 + s2;
+}
+\end{snip}
+你可以定义只接受一个字符串的函数:
+
+\begin{snip}{cpp}
+using namespace std::placeholders;
+
+auto greet = std::bind(catstr, "Hello ", _1);
+std::cout << greet("Haskell Curry");
+\end{snip}
+Scala, 这门语言比 C++ 和 Java 都更函数式, 其语法也比较折中. 如果你期望定义的函数可以部分应用, 你就用多个参数列表来
+定义它:
+
+\begin{snip}{scala}
+def catstr(s1: String)(s2: String) = s1 + s2
+\end{snip}
+当然这需要库的作者有些预测未来的眼光.
+
+\section{指数}
+
+在数学文献中, 函数物件, 或者说两个物件 $a$ 和 $b$ 的内 hom-集合, 经常叫做 \newterm{exponential 指数} 并记作 $b^{a}$.
+注意参数类型在指数的位置上. 这个记号刚开始看着挺奇怪, 但如果你想想函数和积之间的关系, 道理就很清楚了. 我们已经看到, 我们需要用
+积来定义内 hom-集合的普遍构造. 但是函数和积之间的关系更深.
+
+考虑有限类型上的函数时候, 这个道理最明显 --- 这些类型只有固定的值数量, 例如 \code{Bool}, \code{Char}, 或者甚至
+\code{Int} 和 \code{Double}. 这些函数, 至少在原则上, 可以完全备忘化或者变成备查的数据结构. 这就是函数(态射)和函数类型
+(物件)等价的本质.
+
+例如一个从 \code{Bool} 出发的纯函数完全可以用一对值来描述: 一个对应于 \code{False}, 一个对应于 \code{True}.
+从 \code{Bool} 到 \code{Int} 的所有可能的函数的集合就是所有 \code{Int} 对的集合. 这和积 \code{Int} $\times$ \code{Int}
+是一样的, 用一个稍有趣味的记号就是 \code{Int}\textsuperscript{2}.
+
+再举一个例子, C++ 的 \code{char} 类型包含 256 个值(因为 Haskell 使用 Unicode, 所以 \code{Char} 更大). 在 C++ 标准库中,
+有一些函数通常用查表实现. 函数例如 \code{isupper} 或者 \code{isspace} 用表来实现, 这表等价于 256 个元素的元组. 元组是
+一个积类型, 所以我们在处理 256 个布尔值的积: \code{bool \times bool \times bool \times ... \times bool}. 我们在
+算术中知道迭代的积定义了幂. 如果你把 \code{bool} 自乘 256 (或者 \code{char})次, 你得到 \code{bool} 的 \code{char} 次幂,
+或者 \code{bool}\textsuperscript{\code{char}}.
+
+在 \code{bool} 的 256 次幂中有多少值? 恰好 $2^{256}$. 这也是从 \code{char} 到 \code{bool} 的所有可能的函数的数量,
+每个函数对应一个唯一的 256 元组. 你可以类似地计算从 \code{bool} 到 \code{char} 的函数数量是 $256^{2}$, 以此类推.
+指数的记号在这些情况下都很合理.
+
+我们或许不会想备忘一个从 \code{int} 或者 \code{double} 到其它类型的函数. 但不管实用与否, 函数和数据类型都是等价的. 也有
+无限的类型, 例如列表, 字符串, 或者树. 直接备忘这些函数要无穷的存储, 但 Haskell 是个懒惰的语言, 所以懒惰求值的数据结构和
+函数之间的边界是模糊的. 函数和数据类型的对称性解释了 Haskell 的函数类型同范畴指数物件 -- 这更像数据一些 --- 的恒等性.
+
+
+\section{笛卡尔闭范畴}
+
+虽然我会继续用集合的范畴来作为类型和函数的模型, 但是值得提一下, 有一类更大的范畴也可以拿来用. 这些范畴是
+
+笛卡尔闭范畴中必须包括:
+
+\begin{enumerate}
+  \tightlist
+  \item
+        终止物件,
+  \item
+        任意一对物件的积
+  \item
+        任意一对物件的指数
+\end{enumerate}
+如果你选择一个指数作为迭代物件(也许迭代无穷次), 那么你可以把笛卡尔闭范畴看成一个支持无穷元之积的范畴. 特殊的,
+终止范畴可以看成是零个物件的积 --- 或者一个物件的零次幂.
+
+笛卡尔闭范畴从计算机科学的角度来看很有趣, 因为它们提供了简单类型 lambda 演算的模型. 简单类型 lambda 演算是所有有
+类型编程语言的基础.
+
+终止物件和积有其对偶: 初始物件和余积. 如果一个笛卡尔闭合范畴同样有这两个东西, 而且这里面积还可以分配到余积上:
+\begin{gather*}
+  a \times (b + c) = a \times b + a \times c \\
+  (b + c) \times a = b \times a + c \times a
+\end{gather*}
+这个范畴就叫做是一个 \newterm{bicartesian closed 双笛卡尔闭}的范畴. 在下一个章节我们会降到双笛卡尔闭范畴,
+拿 $\Set$ 作为一个例子, 有非常有用的性质.
+
+\section{指数和代数数据类型}
+
+把函数类型看成幂. 这个观点与代数数据类型的思想不谋而合. 高中代数里和 0, 1, 和, 积, 指数的基本性质在任何双笛卡尔闭范畴
+中都是对的, 它们分别对应于初始物件, 终止物件, 余积, 积, 和指数. 我们还没有工具来证明它们(例如伴随或者 Yoneda 引理),
+但是我还是会把它们列出来, 培养一些有价值的感觉.
+
+\subsection{零幂}
+
+\[a^{0} = 1\]
+在范畴论中, 我们把 0 换成初始物件, 1 换成终止物件, 等号换成同构. 指数是内 hom-集合. 这个特殊的指数表示从初始物件到
+任意物件 $a$ 的态射的集合. 根据初始物件的定义, 只有一个这样的态射, 所以 hom-集 $\cat{C}(0, a)$ 是一个单例集合.
+单例集是 $\Set$ 中的终止物件, 所以这个性质在 $\Set$ 中是显然的. 我们在这说的是它在任何双笛卡尔闭范畴中都成立.
+
+在 Haskell 里, 我们用 \code{Void} 代替 0; 用 \code{()} 代替 1; 用函数类型代替指数. 这个等式说的是从 \code{Void} 到
+任意类型 \code{a} 的函数的集合等价于 \code{()} 类型 --- 这类型是个单例. 换句话说, 只有一个函数 \code{Void -> a}.
+我们见过这个函数: 叫做 \code{absurd}.
+
+这有点难理解, 有两个原因. 一是 Haskell 中其实没有空类型 --- 每个类型都包含 ``永不结束的计算的结果'', 或者说 bottom.
+第二个原因是所有 \code{absurd} 实现都是等价的. 因为不管它做什么, 都没人执行它. 没有值可以传给 \code{absurd}.
+(如果你传给它一个永不结束的计算, 它也永不返回!)
+
+
+\subsection{一的幂}
+
+\[1^{a} = 1\]
+这个性质, 在 $\Set$ 中, 就是重复了终止物件的定义: 任何物件到终止物件都有唯一的态射. 总体上, 从 $a$ 到终止物件的内 hom-物件
+都同构于终止物件自己.
+
+在 Haskell, 只有一个函数从任意类型到 \code{()} --- 就叫做 \code{unit}. 你可以把它看成是 \code{const} 函数部分应用到
+\code{()} 上.
+
+\subsection{幂为1}
+
+\[a^{1} = a\]
+这就是重复了来自终止物件的态射可以挑出物件 \code{a} 中的``元素''. 这些态射的集合同构于物件自己. 在 $\Set$ 和 Haskell 里,
+这同构是集合 \code{a} 的元素和挑出这些元素的函数 \code{() -> a} 之间的同构.
+
+\subsection{指数的和}
+
+\[a^{b+c} = a^{b} \times a^{c}\]
+范畴论中, 这就是在说两个物件的余积作指数同构于两个指数乘起来. 在 Haskell 里, 这个代数性质有一个非常有用的解释.
+它告诉我们来自两类型和的函数等价于一对来自其单体类型的函数. 这就是我们定义和类型函数时候用的 \code{case} 语句.
+通常我们把不同的情况分开, 而不是写在一起. 例如, 拿一个和类型的函数 \code{Either Int Double} 说:
+
+\src{snippet10}
+它可以定义为一对函数, 分别从 \code{Int} 和 \code{Double} 出发.
+
+\src{snippet11}
+这里, \code{n} 是一个 \code{Int}, \code{x} 是一个 \code{Double}.
+
+\subsection{指数的指数}
+
+\[(a^{b})^{c} = a^{b \times c}\]
+这就是一种用指数物件来表达柯里化的方法. 返回一个函数的函数等价于一个从积出发的函数 (一个二元函数).
+
+\subsection{积的指数}
+
+\[(a \times b)^{c} = a^{c} \times b^{c}\]
+在 Haskell 中: 返回一个对的函数等价于一对返回一个元素的函数.
+
+不可思议, 那些简单的高中代数性质可以直接抬升到范畴论里, 而且在函数式变成中竟然有其实际应用.
+
+\section{Curry-Howard 同构}
+
+我已经提过逻辑和代数数据结构之间的关系. \code{Void} 类型和单元类型 \code{()} 分别对应于 false 和 true.
+积类型与和类型分别对应于逻辑的合取($\wedge$)和析取($\vee$). 照这样推演, 我们刚刚定义的函数类型对应逻辑蕴涵
+($\Rightarrow$). 换句话说, 类型 \code{a -> b} 可以读成 ``如果 a, 那么 b''.
+
+根据 Curry-Howard 同构, 类型可以解释成一个命题 --- 一个要么真要么假的陈述或者判断. 如果类型不是空的, 这个命题
+就是真的; 如果类型是空的, 这个类型就是假的. 特别来说, 如果一个函数类型非空, 也就是说存在这个类型的函数, 那么一个
+逻辑蕴涵的定理就是真的. 这个函数的实现就是定理的证明. 写程序等价于写定理证明. 看几个例子:
+
+拿我们在定义函数物件时的函数 \code{eval} 说. 它的签名是:
+
+\src{snippet12}
+它接受一个对, 其由一个函数和一个参数组成, 然后返回一个合适的类型作为结果. 这是 Haskell 对下面这个态射的实现:
+
+\[eval \Colon (a \Rightarrow b) \times a \to b\]
+这定义了函数类型 $a \Rightarrow b$ (或者说指数物件 $b^{a}$). 试着把这个签名用 Curry-Howard 同构翻译成
+逻辑谓词:
+
+\[((a \Rightarrow b) \wedge a) \Rightarrow b\]
+读法: 如果 $a$ 可以推出 $b$, 并且 $a$ 是真的, 那么 $b$ 是真的. 这显然, 古人就知道这是 \newterm{modus ponens 肯定前件}.
+我们可以实现下面的函数来证明它:
+
+\src{snippet13}
+如果你给我一个对, 其由函数 f(接受 a 返回 b) 和具体的值 x(类型为 a) 组成, 我就可以通过把 x 应用到 f 上来得到一个
+类型为 b 的值. 通过实现这个函数, 我们证明了类型 $((a \Rightarrow b) \wedge a) \Rightarrow b$ 是非空的.
+因此肯定前件在我们的逻辑中是真的.
+
+那么, 一个完全错误的谓词如何呢? 例如: 若 $a$ 或 $b$ 是真的, 那么 $a$ 是真的.
+
+\[a \vee b \Rightarrow a\]
+这显然是错的, 因为你可以让 $a$ 为假, $b$ 为真. 这是个反例.
+
+用 Curry-Howard 同构, 可以把这个函数签名映射成谓词.
+
+\src{snippet14}
+试试吧, 你实现不了这个函数 --- 如果你用 \code{Right} 调用它, 就没法产生一个类型为 \code{a} 的值.
+(记住, 我们在说纯函数.)
+
+最后, 我们来到函数 \code{absurd} 的含义:
+
+\src{snippet15}
+考虑到 \code{Void} 翻译为 false, 我们得到:
+
+\[false \Rightarrow a\]
+谬误推出一切 (\emph{ex falso quodlibet}). 这是 Haskell 中这个语句的一个可能实现:
+
+\begin{snip}{haskell}
+absurd (Void a) = absurd a
+\end{snip}
+这里 \code{Void} 定义为:
+
+\begin{snip}{haskell}
+newtype Void = Void Void
+\end{snip}
+和以前一样, 类型 \code{Void} 很难懂. 这个定义让它永远构造不出值来. 因为如果你要构造出一个, 必须先提供一个.
+因此, 函数 \code{absurd} 永远调用不了.
+
+这些都是有趣的例子, 但是 Curry-Howard 同构实际中真的有用吗? 也许不在日常编程里. 但是有一些编程语言例如 Agda 或者
+Coq, 它们利用 Curry-Howard 同构来证明定理.
+
+计算机不仅在帮助数学家 --- 他们在革新数学的基础. 最新的研究热点叫做同伦类型论 (homotopy type theory). 它是类型论
+的一个分支. 它充满了布尔值, 整数, 积, 余积, 函数类型等等. 而且, 为了消除任何疑虑, 这个理论是用 Coq 和 Agda 来
+表述的. 计算机不只用一种方式革故鼎新.
+
+\section{参考文献}
+
+\begin{enumerate}
+  \tightlist
+  \item
+        Ralph Hinze, Daniel W. H. James,
+        \urlref{http://www.cs.ox.ac.uk/ralf.hinze/publications/WGP10.pdf}{Reason
+          Isomorphically!}. 这篇论文证明了我在这章里提过的所有范畴论中的那些高中代数性质.
+\end{enumerate}
