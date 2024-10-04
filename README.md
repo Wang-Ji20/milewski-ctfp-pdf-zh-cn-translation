@@ -34,7 +34,7 @@ build the edition you want (Haskell, Scala, OCaml, Reason and their printed
 versions). For example, to build the Scala edition you'll have to type
 `nix build .#ctfp-scala`.
 
-中文翻译: `nix build .#zh-cn`
+中文翻译: `nix --extra-experimental-features nix-command --extra-experimental-features flakes build .#ctfp-print-zh-cn`
 
 Upon successful compilation, the PDF file will be placed in the `result`
 directory.
